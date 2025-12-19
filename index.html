@@ -26,6 +26,16 @@
     <button id="sortTypeBtn">種別順</button>
     <button id="sortTitleBtn">タイトル順</button>
     <button id="sortCreatorBtn">制作者順</button>
+    <button id="sortDateBtn">登録日時順</button>
+  </div>
+
+  <!-- 種別で絞り込み -->
+  <div>
+    <label>種別で絞り込み:</label>
+    <button id="filterBookBtn">本</button>
+    <button id="filterCDBtn">CD</button>
+    <button id="filterRecordBtn">レコード</button>
+    <button id="filterAllBtn">すべて</button>
   </div>
 
   <!-- 入力フォーム -->
@@ -39,23 +49,22 @@
     </label>
     <label>タイトル: <input type="text" id="title"></label>
     <label>制作者: <input type="text" id="creator"></label>
-    <button id="saveBtn">登録</button>
+    <button id="saveBtn">保存</button>
   </div>
 
   <h2>一覧</h2>
   <div id="list"></div>
 
   <script>
+  window.onload = function() {
     let items = [];
 
     // ページ読み込み時にlocalStorageから復元
-    window.onload = function() {
-      const saved = localStorage.getItem('myCollection');
-      if (saved) {
-        items = JSON.parse(saved);
-        renderList();
-      }
-    };
+    const saved = localStorage.getItem('myCollection');
+    if (saved) {
+      items = JSON.parse(saved);
+      renderList();
+    }
 
     // 保存ボタン
     document.getElementById('saveBtn').onclick = function() {
@@ -76,12 +85,11 @@
       }
 
       const newItem = { 
-  type, 
-  title, 
-  creator,
-  date: new Date().toLocaleString() // 登録日時を追加
-};
-      div.textContent = `${icon} ${item.title} - ${item.creator} (${item.date})`;
+        type, 
+        title, 
+        creator,
+        date: new Date().toLocaleString() // 登録日時を追加
+      };
       items.push(newItem);
       localStorage.setItem('myCollection', JSON.stringify(items));
       renderList();
@@ -97,12 +105,10 @@
         renderList();
         return;
       }
-
       const filtered = items.filter(item =>
         item.title.toLowerCase().includes(keyword) ||
         item.creator.toLowerCase().includes(keyword)
       );
-
       renderList(filtered);
     };
 
@@ -125,12 +131,29 @@
       items.sort((a, b) => a.creator.localeCompare(b.creator));
       renderList();
     };
+    document.getElementById('sortDateBtn').onclick = function() {
+      items.sort((a, b) => new Date(a.date) - new Date(b.date));
+      renderList();
+    };
+
+    // 絞り込みボタン
+    document.getElementById('filterBookBtn').onclick = function() {
+      renderList(items.filter(item => item.type === 'book'));
+    };
+    document.getElementById('filterCDBtn').onclick = function() {
+      renderList(items.filter(item => item.type === 'cd'));
+    };
+    document.getElementById('filterRecordBtn').onclick = function() {
+      renderList(items.filter(item => item.type === 'record'));
+    };
+    document.getElementById('filterAllBtn').onclick = function() {
+      renderList(); // 全件表示
+    };
 
     // 一覧表示
     function renderList(displayItems) {
       const listDiv = document.getElementById('list');
       listDiv.innerHTML = "";
-
       const showItems = displayItems || items;
 
       showItems.forEach(item => {
@@ -142,7 +165,7 @@
         if(item.type === "cd") icon = "🎵";
         if(item.type === "record") icon = "💿";
 
-        div.textContent = `${icon} ${item.title} - ${item.creator} `;
+        div.textContent = `${icon} ${item.title} - ${item.creator} (${item.date})`;
 
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = "削除";
@@ -156,30 +179,9 @@
         listDiv.appendChild(div);
       });
     }
-  // フィルター用ボタン
-document.getElementById('filterBookBtn').onclick = function() {
-  renderList(items.filter(item => item.type === 'book'));
-};
-document.getElementById('filterCDBtn').onclick = function() {
-  renderList(items.filter(item => item.type === 'cd'));
-};
-document.getElementById('filterRecordBtn').onclick = function() {
-  renderList(items.filter(item => item.type === 'record'));
-};
-document.getElementById('filterAllBtn').onclick = function() {
-  renderList(); // 全件表示
-};
- 
+
+  };
   </script>
 
 </body>
-<div>
-    <label>種別で絞り込み:</label>
-    <button id="filterBookBtn">本</button>
-    <button id="filterCDBtn">CD</button>
-    <button id="filterRecordBtn">レコード</button>
-    <button id="filterAllBtn">すべて</button>
-  </div>
-
-
-
+</html>
