@@ -75,7 +75,13 @@
         return;
       }
 
-      const newItem = { type, title, creator };
+      const newItem = { 
+  type, 
+  title, 
+  creator,
+  date: new Date().toLocaleString() // 登録日時を追加
+};
+      div.textContent = `${icon} ${item.title} - ${item.creator} (${item.date})`;
       items.push(newItem);
       localStorage.setItem('myCollection', JSON.stringify(items));
       renderList();
@@ -174,5 +180,6 @@ document.getElementById('filterAllBtn').onclick = function() {
     <button id="filterRecordBtn">レコード</button>
     <button id="filterAllBtn">すべて</button>
   </div>
+
 
 
