@@ -150,6 +150,20 @@
         listDiv.appendChild(div);
       });
     }
+  // フィルター用ボタン
+document.getElementById('filterBookBtn').onclick = function() {
+  renderList(items.filter(item => item.type === 'book'));
+};
+document.getElementById('filterCDBtn').onclick = function() {
+  renderList(items.filter(item => item.type === 'cd'));
+};
+document.getElementById('filterRecordBtn').onclick = function() {
+  renderList(items.filter(item => item.type === 'record'));
+};
+document.getElementById('filterAllBtn').onclick = function() {
+  renderList(); // 全件表示
+};
+ 
   </script>
 
 </body>
@@ -160,4 +174,5 @@
     <button id="filterRecordBtn">レコード</button>
     <button id="filterAllBtn">すべて</button>
   </div>
+
 
