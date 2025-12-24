@@ -2,121 +2,164 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>持ち物管理アプリ（保存確認版）</title>
+  <title>持ち物管理アプリ（完全版）</title>
   <style>
-    body { font-family: sans-serif; margin: 20px; }
-    input, select, button { margin: 5px; }
-    .item { margin: 5px 0; }
+    body { font-family: sans-serif; margin: 20px; line-height: 1.6; background-color: #f9f9f9; }
+    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    section { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+    input, select, button { padding: 8px; margin: 5px; border-radius: 4px; border: 1px solid #ccc; }
+    button { cursor: pointer; background-color: #f0f0f0; }
+    button:hover { background-color: #e0e0e0; }
+    #saveBtn { background-color: #4CAF50; color: white; border: none; }
+    #saveBtn:hover { background-color: #45a049; }
+    .item { 
+      background: #fff; border: 1px solid #ddd; padding: 10px; margin: 5px 0; 
+      display: flex; justify-content: space-between; align-items: center; 
+    }
+    .del-btn { background-color: #ff4d4d; color: white; border: none; padding: 5px 10px; }
+    .del-btn:hover { background-color: #cc0000; }
   </style>
 </head>
 <body>
 
-<h1>持ち物管理アプリ（保存確認版）</h1>
+<div class="container">
+  <h1>持ち物管理アプリ</h1>
 
-<!-- 検索 -->
-<div>
-  <label>検索: <input type="text" id="searchBox" placeholder="タイトル・制作者で検索"></label>
-  <button id="searchBtn">検索</button>
-  <button id="clearSearchBtn">クリア</button>
-</div>
+  <section>
+    <label>検索: <input type="text" id="searchBox" placeholder="タイトル・制作者"></label>
+    <button id="searchBtn">検索</button>
+    <button id="clearSearchBtn">クリア</button>
+  </section>
 
-<!-- 並び替え -->
-<div>
-  <label>並び替え:</label>
-  <button id="sortTypeBtn">種別順</button>
-  <button id="sortTitleBtn">タイトル順</button>
-  <button id="sortCreatorBtn">制作者順</button>
-</div>
+  <section>
+    <label>並び替え:</label>
+    <button id="sortTypeBtn">種別順</button>
+    <button id="sortTitleBtn">タイトル順</button>
+    <button id="sortCreatorBtn">制作者順</button>
+  </section>
 
-<!-- 入力フォーム -->
-<div>
-  <label>種別: 
+  <section>
+    <h3>新規追加</h3>
     <select id="type">
       <option value="book">本</option>
       <option value="cd">CD</option>
       <option value="record">レコード</option>
     </select>
-  </label>
-  <label>タイトル: <input type="text" id="title"></label>
-  <label>制作者: <input type="text" id="creator"></label>
-  <label>価格: <input type="number" id="price" placeholder="円"></label>
-  <button id="saveBtn">保存</button>
-</div>
+    <input type="text" id="title" placeholder="タイトル">
+    <input type="text" id="creator" placeholder="制作者">
+    <input type="number" id="price" placeholder="価格（円）">
+    <button id="saveBtn">保存</button>
+  </section>
 
-<h2>一覧</h2>
-<div id="list"></div>
+  <h2>一覧</h2>
+  <div id="list"></div>
+</div>
 
 <script>
 let items = [];
 
-// ページ読み込み時にlocalStorageから復元
+// 1. ページ読み込み時の処理
 window.onload = function() {
-  try {
-    const saved = localStorage.getItem('myCollection');
-    if (saved) {
+  const saved = localStorage.getItem('myCollection');
+  if (saved) {
+    try {
       items = JSON.parse(saved);
-      console.log("復元成功:", items);
       renderList();
-    } else {
-      console.log("保存データなし");
+    } catch(e) {
+      console.error("データ読み込みエラー", e);
     }
-  } catch(e) {
-    console.error("復元エラー:", e);
   }
 };
 
-// 保存ボタン
+// 2. 保存機能
 document.getElementById('saveBtn').onclick = function() {
   const type = document.getElementById('type').value;
   const title = document.getElementById('title').value.trim();
   const creator = document.getElementById('creator').value.trim();
   const price = parseInt(document.getElementById('price').value, 10) || 0;
 
-  if (title === "" || creator === "") {
-    alert("タイトルと制作者は必須です");
+  if (!title || !creator) {
+    alert("タイトルと制作者を入力してください");
     return;
   }
 
-  const duplicate = items.some(item => item.type === type && item.title === title);
-  if (duplicate) {
-    alert("すでに同じタイトルが登録されています！");
+  if (items.some(item => item.type === type && item.title === title)) {
+    alert("このアイテムは既に登録されています");
     return;
   }
 
-  const newItem = { type, title, creator, price };
-  items.push(newItem);
+  items.push({ type, title, creator, price });
+  saveAndRender();
 
-  // 保存処理
-  try {
-    localStorage.setItem('myCollection', JSON.stringify(items));
-    console.log("保存成功:", localStorage.getItem('myCollection'));
-  } catch(e) {
-    console.error("保存エラー:", e);
-  }
-
-  renderList();
-
-  // フォームをクリア
+  // フォームクリア
   document.getElementById('title').value = "";
   document.getElementById('creator').value = "";
   document.getElementById('price').value = "";
 };
 
-// 検索・クリア
+// 3. 検索機能
 document.getElementById('searchBtn').onclick = function() {
-  const keyword = document.getElementById('searchBox').value.trim().toLowerCase();
-  if (keyword === "") { renderList(); return; }
-
-  const filtered = items.filter(item =>
-    item.title.toLowerCase().includes(keyword) ||
+  const keyword = document.getElementById('searchBox').value.toLowerCase();
+  const filtered = items.filter(item => 
+    item.title.toLowerCase().includes(keyword) || 
     item.creator.toLowerCase().includes(keyword)
   );
   renderList(filtered);
 };
+
 document.getElementById('clearSearchBtn').onclick = function() {
   document.getElementById('searchBox').value = "";
   renderList();
 };
 
-// 並び替え
-document.getElementById('sortTypeBtn'
+// 4. ソート機能
+const sortData = (key) => {
+  items.sort((a, b) => {
+    if (typeof a[key] === 'string') return a[key].localeCompare(b[key], 'ja');
+    return a[key] - b[key];
+  });
+  saveAndRender();
+};
+
+document.getElementById('sortTypeBtn').onclick = () => sortData('type');
+document.getElementById('sortTitleBtn').onclick = () => sortData('title');
+document.getElementById('sortCreatorBtn').onclick = () => sortData('creator');
+
+// 5. 削除機能
+function deleteItem(index) {
+  if (confirm("削除しますか？")) {
+    items.splice(index, 1);
+    saveAndRender();
+  }
+}
+
+// 6. 共通処理（保存して再描画）
+function saveAndRender() {
+  localStorage.setItem('myCollection', JSON.stringify(items));
+  renderList();
+}
+
+// 7. 画面描画
+function renderList(displayItems = items) {
+  const listDiv = document.getElementById('list');
+  listDiv.innerHTML = "";
+
+  const typeMap = { book: "本", cd: "CD", record: "レコード" };
+
+  displayItems.forEach((item, index) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <span>
+        <strong>[${typeMap[item.type]}]</strong> ${item.title} / ${item.creator} 
+        <small>(¥${item.price.toLocaleString()})</small>
+      </span>
+      <button class="del-btn" onclick="deleteItem(${index})">削除</button>
+    `;
+    listDiv.appendChild(div);
+  });
+}
+</script>
+
+</body>
+</html>
