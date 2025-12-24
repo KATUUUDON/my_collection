@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>持ち物管理アプリ</title>
+  <title>持ち物管理アプリ（保存確認版）</title>
   <style>
     body { font-family: sans-serif; margin: 20px; }
     input, select, button { margin: 5px; }
@@ -11,177 +11,112 @@
 </head>
 <body>
 
-  <h1>持ち物管理アプリ</h1>
+<h1>持ち物管理アプリ（保存確認版）</h1>
 
-  <!-- 検索ボックス -->
-  <div>
-    <label>検索: <input type="text" id="searchBox" placeholder="タイトル・制作者で検索"></label>
-    <button id="searchBtn">検索</button>
-    <button id="clearSearchBtn">クリア</button>
-  </div>
+<!-- 検索 -->
+<div>
+  <label>検索: <input type="text" id="searchBox" placeholder="タイトル・制作者で検索"></label>
+  <button id="searchBtn">検索</button>
+  <button id="clearSearchBtn">クリア</button>
+</div>
 
-  <!-- 並び替えボタン -->
-  <div>
-    <label>並び替え:</label>
-    <button id="sortTypeBtn">種別順</button>
-    <button id="sortTitleBtn">タイトル順</button>
-    <button id="sortCreatorBtn">制作者順</button>
-    <button id="sortDateBtn">登録日時順</button>
-  </div>
+<!-- 並び替え -->
+<div>
+  <label>並び替え:</label>
+  <button id="sortTypeBtn">種別順</button>
+  <button id="sortTitleBtn">タイトル順</button>
+  <button id="sortCreatorBtn">制作者順</button>
+</div>
 
-  <!-- 種別で絞り込み -->
-  <div>
-    <label>種別で絞り込み:</label>
-    <button id="filterBookBtn">本</button>
-    <button id="filterCDBtn">CD</button>
-    <button id="filterRecordBtn">レコード</button>
-    <button id="filterAllBtn">すべて</button>
-  </div>
+<!-- 入力フォーム -->
+<div>
+  <label>種別: 
+    <select id="type">
+      <option value="book">本</option>
+      <option value="cd">CD</option>
+      <option value="record">レコード</option>
+    </select>
+  </label>
+  <label>タイトル: <input type="text" id="title"></label>
+  <label>制作者: <input type="text" id="creator"></label>
+  <label>価格: <input type="number" id="price" placeholder="円"></label>
+  <button id="saveBtn">保存</button>
+</div>
 
-  <!-- 入力フォーム -->
-  <div>
-    <label>種別: 
-      <select id="type">
-        <option value="book">本</option>
-        <option value="cd">CD</option>
-        <option value="record">レコード</option>
-      </select>
-    </label>
-    <label>タイトル: <input type="text" id="title"></label>
-    <label>制作者: <input type="text" id="creator"></label>
-    <button id="saveBtn">保存</button>
-  </div>
+<h2>一覧</h2>
+<div id="list"></div>
 
-  <h2>一覧</h2>
-  <div id="list"></div>
+<script>
+let items = [];
 
-  <script>
-  window.onload = function() {
-    let items = [];
-
-    // ページ読み込み時にlocalStorageから復元
+// ページ読み込み時にlocalStorageから復元
+window.onload = function() {
+  try {
     const saved = localStorage.getItem('myCollection');
     if (saved) {
       items = JSON.parse(saved);
+      console.log("復元成功:", items);
       renderList();
+    } else {
+      console.log("保存データなし");
     }
+  } catch(e) {
+    console.error("復元エラー:", e);
+  }
+};
 
-    // 保存ボタン
-    document.getElementById('saveBtn').onclick = function() {
-      const type = document.getElementById('type').value;
-      const title = document.getElementById('title').value.trim();
-      const creator = document.getElementById('creator').value.trim();
+// 保存ボタン
+document.getElementById('saveBtn').onclick = function() {
+  const type = document.getElementById('type').value;
+  const title = document.getElementById('title').value.trim();
+  const creator = document.getElementById('creator').value.trim();
+  const price = parseInt(document.getElementById('price').value, 10) || 0;
 
-      if (title === "" || creator === "") {
-        alert("タイトルと制作者は必須です");
-        return;
-      }
+  if (title === "" || creator === "") {
+    alert("タイトルと制作者は必須です");
+    return;
+  }
 
-      // 重複チェック
-      const duplicate = items.some(item => item.type === type && item.title === title);
-      if (duplicate) {
-        alert("すでに同じタイトルが登録されています！");
-        return;
-      }
+  const duplicate = items.some(item => item.type === type && item.title === title);
+  if (duplicate) {
+    alert("すでに同じタイトルが登録されています！");
+    return;
+  }
 
-      const newItem = { 
-        type, 
-        title, 
-        creator,
-        date: new Date().toLocaleString() // 登録日時を追加
-      };
-      items.push(newItem);
-      localStorage.setItem('myCollection', JSON.stringify(items));
-      renderList();
+  const newItem = { type, title, creator, price };
+  items.push(newItem);
 
-      document.getElementById('title').value = "";
-      document.getElementById('creator').value = "";
-    };
+  // 保存処理
+  try {
+    localStorage.setItem('myCollection', JSON.stringify(items));
+    console.log("保存成功:", localStorage.getItem('myCollection'));
+  } catch(e) {
+    console.error("保存エラー:", e);
+  }
 
-    // 検索ボタン
-    document.getElementById('searchBtn').onclick = function() {
-      const keyword = document.getElementById('searchBox').value.trim().toLowerCase();
-      if (keyword === "") {
-        renderList();
-        return;
-      }
-      const filtered = items.filter(item =>
-        item.title.toLowerCase().includes(keyword) ||
-        item.creator.toLowerCase().includes(keyword)
-      );
-      renderList(filtered);
-    };
+  renderList();
 
-    // クリアボタン
-    document.getElementById('clearSearchBtn').onclick = function() {
-      document.getElementById('searchBox').value = "";
-      renderList();
-    };
+  // フォームをクリア
+  document.getElementById('title').value = "";
+  document.getElementById('creator').value = "";
+  document.getElementById('price').value = "";
+};
 
-    // 並び替えボタン
-    document.getElementById('sortTypeBtn').onclick = function() {
-      items.sort((a, b) => a.type.localeCompare(b.type));
-      renderList();
-    };
-    document.getElementById('sortTitleBtn').onclick = function() {
-      items.sort((a, b) => a.title.localeCompare(b.title));
-      renderList();
-    };
-    document.getElementById('sortCreatorBtn').onclick = function() {
-      items.sort((a, b) => a.creator.localeCompare(b.creator));
-      renderList();
-    };
-    document.getElementById('sortDateBtn').onclick = function() {
-      items.sort((a, b) => new Date(a.date) - new Date(b.date));
-      renderList();
-    };
+// 検索・クリア
+document.getElementById('searchBtn').onclick = function() {
+  const keyword = document.getElementById('searchBox').value.trim().toLowerCase();
+  if (keyword === "") { renderList(); return; }
 
-    // 絞り込みボタン
-    document.getElementById('filterBookBtn').onclick = function() {
-      renderList(items.filter(item => item.type === 'book'));
-    };
-    document.getElementById('filterCDBtn').onclick = function() {
-      renderList(items.filter(item => item.type === 'cd'));
-    };
-    document.getElementById('filterRecordBtn').onclick = function() {
-      renderList(items.filter(item => item.type === 'record'));
-    };
-    document.getElementById('filterAllBtn').onclick = function() {
-      renderList(); // 全件表示
-    };
+  const filtered = items.filter(item =>
+    item.title.toLowerCase().includes(keyword) ||
+    item.creator.toLowerCase().includes(keyword)
+  );
+  renderList(filtered);
+};
+document.getElementById('clearSearchBtn').onclick = function() {
+  document.getElementById('searchBox').value = "";
+  renderList();
+};
 
-    // 一覧表示
-    function renderList(displayItems) {
-      const listDiv = document.getElementById('list');
-      listDiv.innerHTML = "";
-      const showItems = displayItems || items;
-
-      showItems.forEach(item => {
-        const div = document.createElement('div');
-        div.className = "item";
-
-        let icon = "";
-        if(item.type === "book") icon = "📘";
-        if(item.type === "cd") icon = "🎵";
-        if(item.type === "record") icon = "💿";
-
-        div.textContent = `${icon} ${item.title} - ${item.creator} (${item.date})`;
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = "削除";
-        deleteBtn.onclick = function() {
-          items = items.filter(i => !(i.type === item.type && i.title === item.title));
-          localStorage.setItem('myCollection', JSON.stringify(items));
-          renderList();
-        };
-
-        div.appendChild(deleteBtn);
-        listDiv.appendChild(div);
-      });
-    }
-
-  };
-  </script>
-
-</body>
-</html>
+// 並び替え
+document.getElementById('sortTypeBtn'
