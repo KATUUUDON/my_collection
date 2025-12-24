@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>持ち物管理アプリ（完全版）</title>
+  <title>持ち物管理アプリ</title>
   <style>
     body { font-family: sans-serif; margin: 20px; line-height: 1.6; background-color: #f9f9f9; }
     .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -12,11 +12,41 @@
     button:hover { background-color: #e0e0e0; }
     #saveBtn { background-color: #4CAF50; color: white; border: none; }
     #saveBtn:hover { background-color: #45a049; }
-    .item { 
-      background: #fff; border: 1px solid #ddd; padding: 10px; margin: 5px 0; 
-      display: flex; justify-content: space-between; align-items: center; 
+
+    .item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 4px;
     }
-    .del-btn { background-color: #ff4d4d; color: white; border: none; padding: 5px 10px; }
+    .item .info {
+      display: flex;
+      flex-direction: column;
+    }
+    .item .info .title {
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+    .item .info .creator {
+      font-size: 0.9em;
+      color: #555;
+    }
+    .item .price {
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    .del-btn {
+      background-color: #ff4d4d;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      margin-left: 10px;
+      border-radius: 4px;
+    }
     .del-btn:hover { background-color: #cc0000; }
   </style>
 </head>
@@ -58,30 +88,25 @@
 <script>
 let items = [];
 
-// 1. ページ読み込み時の処理
+// ページ読み込み時
 window.onload = function() {
   const saved = localStorage.getItem('myCollection');
   if (saved) {
     try {
       items = JSON.parse(saved);
       renderList();
-    } catch(e) {
-      console.error("データ読み込みエラー", e);
-    }
+    } catch(e) { console.error("データ読み込みエラー", e); }
   }
 };
 
-// 2. 保存機能
+// 保存ボタン
 document.getElementById('saveBtn').onclick = function() {
   const type = document.getElementById('type').value;
   const title = document.getElementById('title').value.trim();
   const creator = document.getElementById('creator').value.trim();
   const price = parseInt(document.getElementById('price').value, 10) || 0;
 
-  if (!title || !creator) {
-    alert("タイトルと制作者を入力してください");
-    return;
-  }
+  if (!title || !creator) { alert("タイトルと制作者を入力してください"); return; }
 
   if (items.some(item => item.type === type && item.title === title)) {
     alert("このアイテムは既に登録されています");
@@ -91,69 +116,66 @@ document.getElementById('saveBtn').onclick = function() {
   items.push({ type, title, creator, price });
   saveAndRender();
 
-  // フォームクリア
   document.getElementById('title').value = "";
   document.getElementById('creator').value = "";
   document.getElementById('price').value = "";
 };
 
-// 3. 検索機能
+// 検索・クリア
 document.getElementById('searchBtn').onclick = function() {
   const keyword = document.getElementById('searchBox').value.toLowerCase();
-  const filtered = items.filter(item => 
-    item.title.toLowerCase().includes(keyword) || 
+  const filtered = items.filter(item =>
+    item.title.toLowerCase().includes(keyword) ||
     item.creator.toLowerCase().includes(keyword)
   );
   renderList(filtered);
 };
-
 document.getElementById('clearSearchBtn').onclick = function() {
   document.getElementById('searchBox').value = "";
   renderList();
 };
 
-// 4. ソート機能
+// ソート
 const sortData = (key) => {
-  items.sort((a, b) => {
+  items.sort((a,b) => {
     if (typeof a[key] === 'string') return a[key].localeCompare(b[key], 'ja');
-    return a[key] - b[key];
+    return a[key]-b[key];
   });
   saveAndRender();
 };
-
 document.getElementById('sortTypeBtn').onclick = () => sortData('type');
 document.getElementById('sortTitleBtn').onclick = () => sortData('title');
 document.getElementById('sortCreatorBtn').onclick = () => sortData('creator');
 
-// 5. 削除機能
+// 削除
 function deleteItem(index) {
   if (confirm("削除しますか？")) {
-    items.splice(index, 1);
+    items.splice(index,1);
     saveAndRender();
   }
 }
 
-// 6. 共通処理（保存して再描画）
+// 保存して再描画
 function saveAndRender() {
   localStorage.setItem('myCollection', JSON.stringify(items));
   renderList();
 }
 
-// 7. 画面描画
+// 描画
 function renderList(displayItems = items) {
   const listDiv = document.getElementById('list');
   listDiv.innerHTML = "";
+  const typeMap = { book:"本", cd:"CD", record:"レコード" };
 
-  const typeMap = { book: "本", cd: "CD", record: "レコード" };
-
-  displayItems.forEach((item, index) => {
+  displayItems.forEach((item,index) => {
     const div = document.createElement('div');
     div.className = 'item';
     div.innerHTML = `
-      <span>
-        <strong>[${typeMap[item.type]}]</strong> ${item.title} / ${item.creator} 
-        <small>(¥${item.price.toLocaleString()})</small>
-      </span>
+      <div class="info">
+        <span class="title">[${typeMap[item.type]}] ${item.title}</span>
+        <span class="creator">${item.creator}</span>
+      </div>
+      <span class="price">¥${item.price.toLocaleString()}</span>
       <button class="del-btn" onclick="deleteItem(${index})">削除</button>
     `;
     listDiv.appendChild(div);
@@ -163,3 +185,6 @@ function renderList(displayItems = items) {
 
 </body>
 </html>
+
+
+
