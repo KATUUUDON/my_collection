@@ -2,52 +2,31 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>持ち物管理アプリ</title>
+  <title>持ち物管理アプリ </title>
   <style>
-    body { font-family: sans-serif; margin: 20px; line-height: 1.6; background-color: #f9f9f9; }
-    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    section { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
-    input, select, button { padding: 8px; margin: 5px; border-radius: 4px; border: 1px solid #ccc; }
-    button { cursor: pointer; background-color: #f0f0f0; }
-    button:hover { background-color: #e0e0e0; }
-    #saveBtn { background-color: #4CAF50; color: white; border: none; }
-    #saveBtn:hover { background-color: #45a049; }
-
-    .item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #fff;
-      border: 1px solid #ddd;
-      padding: 10px;
-      margin: 5px 0;
-      border-radius: 4px;
-    }
-    .item .info {
-      display: flex;
-      flex-direction: column;
-    }
-    .item .info .title {
-      font-weight: bold;
-      font-size: 1.1em;
-    }
-    .item .info .creator {
-      font-size: 0.9em;
-      color: #555;
-    }
-    .item .price {
-      font-weight: bold;
-      margin-left: 10px;
-    }
-    .del-btn {
-      background-color: #ff4d4d;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin-left: 10px;
-      border-radius: 4px;
-    }
-    .del-btn:hover { background-color: #cc0000; }
+    :root { --primary-color: #4CAF50; --bg-color: #f4f7f6; }
+    body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif; margin: 20px; background-color: var(--bg-color); color: #333; }
+    .container { max-width: 950px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
+    input, select, button { padding: 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; }
+    input[type="date"] { font-family: inherit; }
+    button { cursor: pointer; transition: 0.2s; background-color: #f0f0f0; border: 1px solid #ddd; }
+    button:hover { background-color: #e8e8e8; }
+    .primary-btn { background-color: var(--primary-color); color: white; border: none; font-weight: bold; }
+    .primary-btn:hover { background-color: #45a049; }
+    .summary-card { background: #e3f2fd; padding: 20px; border-radius: 10px; display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; border: 1px solid #bbdefb; }
+    .summary-item { font-size: 1.05em; font-weight: bold; }
+    .active { background-color: #333 !important; color: white !important; }
+    .item { display: grid; grid-template-columns: 1fr auto auto; align-items: center;
+      background: #fff; border: 1px solid #eee; padding: 15px; margin: 10px 0; border-radius: 8px; transition: transform 0.1s; }
+    .item:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .info .title { font-weight: bold; font-size: 1.15em; color: #2c3e50; }
+    .info .sub-text { font-size: 0.85em; color: #7f8c8d; margin-top: 4px; display: block; }
+    .buy-info { font-size: 0.9em; text-align: right; margin-right: 20px; border-right: 1px solid #eee; padding-right: 20px; }
+    .actions { display: flex; gap: 8px; }
+    .edit-btn { background-color: #ff9800; color: white; border: none; padding: 8px 12px; }
+    .del-btn { background-color: #f44336; color: white; border: none; padding: 8px 12px; }
   </style>
 </head>
 <body>
@@ -56,135 +35,232 @@
   <h1>持ち物管理アプリ</h1>
 
   <section>
-    <label>検索: <input type="text" id="searchBox" placeholder="タイトル・制作者"></label>
+    <div id="summary" class="summary-card"></div>
+    <div style="margin-bottom: 15px;">
+      <strong>並び替え:</strong>
+      <button onclick="sortData('date', 'desc')">日付が新しい順</button>
+      <button onclick="sortData('date', 'asc')">日付が古い順</button>
+      <button onclick="sortData('title', 'asc')">タイトル順</button>
+    </div>
+    <div class="filter-group" style="margin-bottom: 15px;">
+      <strong>種別:</strong>
+      <button onclick="filterByType('all')" id="filter-all" class="active">すべて</button>
+      <button onclick="filterByType('book')" id="filter-book">本</button>
+      <button onclick="filterByType('cd')" id="filter-cd">CD</button>
+      <button onclick="filterByType('record')" id="filter-record">レコード</button>
+    </div>
+    <input type="text" id="searchBox" placeholder="キーワードで検索..." style="width: 250px;">
     <button id="searchBtn">検索</button>
-    <button id="clearSearchBtn">クリア</button>
   </section>
 
-  <section>
-    <label>並び替え:</label>
-    <button id="sortTypeBtn">種別順</button>
-    <button id="sortTitleBtn">タイトル順</button>
-    <button id="sortCreatorBtn">制作者順</button>
+  <section id="formSection">
+    <h3 id="formTitle">新しいアイテムを追加</h3>
+    <input type="hidden" id="editIndex" value="-1">
+    <div class="form-grid">
+      <select id="type">
+        <option value="book">本</option>
+        <option value="cd">CD</option>
+        <option value="record">レコード</option>
+      </select>
+      <input type="text" id="title" placeholder="タイトル（必須）">
+      <input type="text" id="creator" placeholder="制作者（必須）">
+      <input type="number" id="price" placeholder="価格（円）">
+      <input type="date" id="date">
+      <input type="text" id="shop" placeholder="購入店名">
+    </div>
+    <button id="saveBtn" class="primary-btn" style="width: 150px;">保存する</button>
+    <button id="cancelEditBtn" style="display:none;">キャンセル</button>
   </section>
 
-  <section>
-    <h3>新規追加</h3>
-    <select id="type">
-      <option value="book">本</option>
-      <option value="cd">CD</option>
-      <option value="record">レコード</option>
-    </select>
-    <input type="text" id="title" placeholder="タイトル">
-    <input type="text" id="creator" placeholder="制作者">
-    <input type="number" id="price" placeholder="価格（円）">
-    <button id="saveBtn">保存</button>
+  <section style="background: #fdfdfd; padding: 15px; border-radius: 8px;">
+    <button onclick="exportJSON()">データをエクスポート（保存）</button>
+    <button onclick="document.getElementById('importFile').click()">インポート（復元）</button>
+    <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importJSON(event)">
   </section>
 
-  <h2>一覧</h2>
+  <h2>コレクション一覧</h2>
   <div id="list"></div>
 </div>
 
 <script>
 let items = [];
+let currentFilter = 'all';
 
-// ページ読み込み時
-window.onload = function() {
-  const saved = localStorage.getItem('myCollection');
-  if (saved) {
-    try {
-      items = JSON.parse(saved);
-      renderList();
-    } catch(e) { console.error("データ読み込みエラー", e); }
-  }
+const setToday = () => { document.getElementById('date').value = new Date().toISOString().slice(0, 10); };
+
+window.onload = () => {
+  const saved = localStorage.getItem('myCollectionUltimate');
+  if (saved) items = JSON.parse(saved);
+  setToday();
+  renderList();
 };
 
-// 保存ボタン
 document.getElementById('saveBtn').onclick = function() {
   const type = document.getElementById('type').value;
   const title = document.getElementById('title').value.trim();
   const creator = document.getElementById('creator').value.trim();
   const price = parseInt(document.getElementById('price').value, 10) || 0;
+  const date = document.getElementById('date').value;
+  const shop = document.getElementById('shop').value.trim() || "不明";
+  const editIndex = parseInt(document.getElementById('editIndex').value);
 
-  if (!title || !creator) { alert("タイトルと制作者を入力してください"); return; }
+  if (!title || !creator) { alert("タイトルと制作者は必須です"); return; }
 
-  if (items.some(item => item.type === type && item.title === title)) {
-    alert("このアイテムは既に登録されています");
-    return;
-  }
+  const newItem = { type, title, creator, price, date, shop };
 
-  items.push({ type, title, creator, price });
+  if (editIndex === -1) { items.push(newItem); } 
+  else { items[editIndex] = newItem; resetForm(); }
+
   saveAndRender();
+};
 
+function editItem(index) {
+  const item = items[index];
+  document.getElementById('type').value = item.type;
+  document.getElementById('title').value = item.title;
+  document.getElementById('creator').value = item.creator;
+  document.getElementById('price').value = item.price;
+  document.getElementById('date').value = item.date;
+  document.getElementById('shop').value = item.shop === "不明" ? "" : item.shop;
+  document.getElementById('editIndex').value = index;
+  
+  document.getElementById('formTitle').innerText = "内容を修正中";
+  document.getElementById('saveBtn').innerText = "更新する";
+  document.getElementById('cancelEditBtn').style.display = "inline";
+  window.scrollTo(0, document.getElementById('formSection').offsetTop - 20);
+}
+
+function resetForm() {
+  document.getElementById('editIndex').value = "-1";
+  document.getElementById('formTitle').innerText = "新しいアイテムを追加";
+  document.getElementById('saveBtn').innerText = "保存する";
+  document.getElementById('cancelEditBtn').style.display = "none";
   document.getElementById('title').value = "";
   document.getElementById('creator').value = "";
   document.getElementById('price').value = "";
-};
-
-// 検索・クリア
-document.getElementById('searchBtn').onclick = function() {
-  const keyword = document.getElementById('searchBox').value.toLowerCase();
-  const filtered = items.filter(item =>
-    item.title.toLowerCase().includes(keyword) ||
-    item.creator.toLowerCase().includes(keyword)
-  );
-  renderList(filtered);
-};
-document.getElementById('clearSearchBtn').onclick = function() {
-  document.getElementById('searchBox').value = "";
-  renderList();
-};
-
-// ソート
-const sortData = (key) => {
-  items.sort((a,b) => {
-    if (typeof a[key] === 'string') return a[key].localeCompare(b[key], 'ja');
-    return a[key]-b[key];
-  });
-  saveAndRender();
-};
-document.getElementById('sortTypeBtn').onclick = () => sortData('type');
-document.getElementById('sortTitleBtn').onclick = () => sortData('title');
-document.getElementById('sortCreatorBtn').onclick = () => sortData('creator');
-
-// 削除
-function deleteItem(index) {
-  if (confirm("削除しますか？")) {
-    items.splice(index,1);
-    saveAndRender();
-  }
+  document.getElementById('shop').value = "";
+  setToday();
 }
 
-// 保存して再描画
-function saveAndRender() {
-  localStorage.setItem('myCollection', JSON.stringify(items));
-  renderList();
-}
+document.getElementById('cancelEditBtn').onclick = resetForm;
 
-// 描画
 function renderList(displayItems = items) {
+  if (currentFilter !== 'all') displayItems = displayItems.filter(i => i.type === currentFilter);
+
+  // 統計計算（個数＋種別ごとの合計金額）
+  const stats = items.reduce((acc, obj) => {
+    acc.totalPrice += obj.price;
+    acc[obj.type] = acc[obj.type] || { count: 0, sum: 0 };
+    acc[obj.type].count += 1;
+    acc[obj.type].sum += obj.price;
+    return acc;
+  }, { totalPrice: 0, book: {count:0,sum:0}, cd: {count:0,sum:0}, record: {count:0,sum:0} });
+
+  document.getElementById('summary').innerHTML = `
+    <div class="summary-item">💰 総資産: ¥${stats.totalPrice.toLocaleString()}</div>
+    <div class="summary-item">📚 本: ${stats.book.count}冊 (¥${stats.book.sum.toLocaleString()})</div>
+    <div class="summary-item">💿 CD: ${stats.cd.count}枚 (¥${stats.cd.sum.toLocaleString()})</div>
+    <div class="summary-item">🎸 レコード: ${stats.record.count}枚 (¥${stats.record.sum.toLocaleString()})</div>
+  `;
+
   const listDiv = document.getElementById('list');
-  listDiv.innerHTML = "";
+  listDiv.innerHTML = displayItems.length === 0 ? "<p>データがありません。</p>" : "";
+  
   const typeMap = { book:"本", cd:"CD", record:"レコード" };
 
-  displayItems.forEach((item,index) => {
+  displayItems.forEach((item) => {
+    const trueIndex = items.indexOf(item); 
     const div = document.createElement('div');
     div.className = 'item';
     div.innerHTML = `
       <div class="info">
         <span class="title">[${typeMap[item.type]}] ${item.title}</span>
-        <span class="creator">${item.creator}</span>
+        <span class="sub-text">制作者: ${item.creator}</span>
       </div>
-      <span class="price">¥${item.price.toLocaleString()}</span>
-      <button class="del-btn" onclick="deleteItem(${index})">削除</button>
+      <div class="buy-info">
+        <div>📅 ${item.date}</div>
+        <div style="color:#27ae60">📍 ${item.shop}</div>
+        <div style="font-weight:bold; margin-top:4px;">¥${item.price.toLocaleString()}</div>
+      </div>
+      <div class="actions">
+        <button class="edit-btn" onclick="editItem(${trueIndex})">編集</button>
+        <button class="del-btn" onclick="deleteItem(${trueIndex})">削除</button>
+      </div>
     `;
     listDiv.appendChild(div);
   });
+}
+
+const sortData = (key, order) => {
+  items.sort((a, b) => {
+    let valA = a[key], valB = b[key];
+    if (key === 'date') { valA = new Date(valA); valB = new Date(valB); }
+    if (order === 'asc') return valA > valB ? 1 : -1;
+    return valA < valB ? 1 : -1;
+  });
+  saveAndRender();
+};
+
+function filterByType(type) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-group button').forEach(b => b.classList.remove('active'));
+  document.getElementById('filter-' + type).classList.add('active');
+  renderList();
+}
+
+function deleteItem(index) {
+  if (confirm("このデータを削除してもよろしいですか？")) {
+    items.splice(index, 1);
+    saveAndRender();
+  }
+}
+
+function saveAndRender() {
+  localStorage.setItem('myCollectionUltimate', JSON.stringify(items));
+  renderList();
+}
+
+function exportJSON() {
+  const data = JSON.stringify(items, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `my_collection_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      items = JSON.parse(e.target.result);
+      saveAndRender();
+      alert("データを復元しました");
+    } catch (err) { alert("有効なファイルではありません"); }
+  };
+  reader.readAsText(file);
 }
 </script>
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
