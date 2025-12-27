@@ -3,264 +3,259 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Collection Manager Pro</title>
+    <title>Ultimate Collection Manager</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --primary: #2c3e50;
-            --accent: #3498db;
-            --success: #27ae60;
-            --danger: #e74c3c;
-            --bg: #f8f9fa;
-        }
-
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --bg: #f4f7f6; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); padding: 20px; color: #333; margin: 0; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
         
-        header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
-        h1 { margin: 0; color: var(--primary); }
+        /* Dashboard */
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 15px; }
+        .chart-container { height: 220px; position: relative; }
 
-        /* ダッシュボード（統計） */
-        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; }
-        .stat-info h4 { margin: 0; color: #7f8c8d; font-size: 0.9em; }
-        .stat-info p { margin: 5px 0 0; font-size: 1.5em; font-weight: bold; }
-        .chart-box { max-width: 200px; margin: auto; }
-
-        /* フォーム */
-        .add-section { background: #f1f4f7; padding: 20px; border-radius: 12px; margin-bottom: 30px; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        input, select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; width: 100%; box-sizing: border-box; }
-        .btn-row { margin-top: 15px; display: flex; gap: 10px; }
-        button { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-save { background: var(--success); color: white; flex-grow: 1; }
-        .btn-save:hover { opacity: 0.8; }
+        /* Form & API Section */
+        .form-section { background: #edf2f7; padding: 20px; border-radius: 15px; margin-bottom: 30px; }
+        .api-row { display: flex; gap: 10px; margin-bottom: 15px; background: #fff; padding: 12px; border-radius: 10px; border: 2px solid var(--accent); }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        input, select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; width: 100%; box-sizing: border-box; }
         
-        /* 検索とフィルタ */
-        .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; }
-        .search-box { flex-grow: 1; min-width: 250px; }
-        .filter-btn { background: #ddd; color: #555; }
-        .filter-btn.active { background: var(--primary); color: white; }
-
-        /* アイテムリスト */
-        .item-list { display: grid; gap: 15px; }
-        .item-card { display: flex; align-items: center; background: white; border: 1px solid #eee; padding: 15px; border-radius: 12px; transition: 0.2s; }
-        .item-card:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .item-img { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; margin-right: 20px; background: #eee; }
-        .item-info { flex-grow: 1; }
-        .item-category { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.7em; text-transform: uppercase; margin-bottom: 5px; color: white; }
-        .cat-book { background: #3498db; }
-        .cat-cd { background: #9b59b6; }
-        .cat-record { background: #e67e22; }
-        .item-title { display: block; font-weight: bold; font-size: 1.1em; }
-        .item-meta { color: #7f8c8d; font-size: 0.85em; }
-        .item-price { font-weight: bold; color: var(--success); margin-left: 15px; font-size: 1.1em; }
-        .actions { display: flex; gap: 5px; margin-left: 15px; }
-        .btn-sm { padding: 6px 10px; font-size: 0.8em; }
+        /* List & Item Design */
+        .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; background: #fff; padding: 15px; border-radius: 10px; align-items: center; }
+        .item-card { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #eee; transition: 0.2s; background: #fff; }
+        .item-card:hover { background: #fafafa; }
+        .item-img { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; margin-right: 15px; background: #eee; border: 1px solid #ddd; }
+        .item-main { flex-grow: 1; }
+        .tag { font-size: 0.7em; padding: 3px 8px; border-radius: 4px; color: white; margin-right: 5px; font-weight: bold; text-transform: uppercase; }
+        
+        /* Buttons */
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-ghost { background: #e2e8f0; color: #4a5568; }
+        .btn:hover { opacity: 0.8; }
 
         @media (max-width: 600px) {
-            .item-card { flex-direction: column; text-align: center; }
-            .item-img { margin: 0 0 10px 0; }
-            .item-price { margin: 10px 0; }
+            .item-card { flex-direction: column; text-align: center; gap: 10px; }
+            .item-img { margin-right: 0; width: 100px; height: 100px; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <h1>My Collection</h1>
+    <header style="text-align:center; margin-bottom:20px;">
+        <h1 style="color:var(--primary); margin:0;">Collection Master Pro</h1>
+        <p style="color:#666;">蔵書・CD・レコード一元管理システム</p>
     </header>
 
     <div class="dashboard">
-        <div class="stat-card">
-            <div class="stat-info">
-                <h4>総資産額</h4>
-                <p id="total-price">¥0</p>
-            </div>
-            <div class="chart-box">
-                <canvas id="typeChart"></canvas>
-            </div>
+        <div class="card">
+            <h4 style="margin-top:0;">📊 所有カテゴリ内訳</h4>
+            <div class="chart-container"><canvas id="pieChart"></canvas></div>
         </div>
-        <div class="stat-card">
-            <div class="stat-info">
-                <h4>アイテム数</h4>
-                <p id="total-count">0 items</p>
-            </div>
+        <div class="card">
+            <h4 style="margin-top:0;">📈 月別投資額（円）</h4>
+            <div class="chart-container"><canvas id="lineChart"></canvas></div>
         </div>
     </div>
 
-    <div class="add-section">
-        <h3 id="form-title">新規追加</h3>
+    <div class="form-section">
+        <div class="api-row">
+            <input type="text" id="api-input" placeholder="ISBN(本) または バーコード/規格品番(CD/レコード) を入力...">
+            <button class="btn btn-primary" onclick="autoFetch()">自動取得</button>
+        </div>
+        
         <div class="form-grid">
             <select id="type">
-                <option value="book">本</option>
-                <option value="cd">CD</option>
-                <option value="record">レコード</option>
+                <option value="book">📚 本</option>
+                <option value="cd">💿 CD</option>
+                <option value="record">🎸 レコード</option>
+                <option value="other">📦 その他</option>
             </select>
             <input type="text" id="title" placeholder="タイトル（必須）">
-            <input type="text" id="creator" placeholder="作者・アーティスト">
-            <input type="number" id="price" placeholder="価格（円）">
+            <input type="text" id="creator" placeholder="作者 / アーティスト">
+            <input type="number" id="price" placeholder="購入価格（円）">
+            <input type="text" id="location" placeholder="保管場所（例：本棚A-1）">
+            <select id="condition">
+                <option value="新品">新品</option>
+                <option value="中古">中古</option>
+                <option value="未開封">未開封</option>
+            </select>
             <input type="date" id="date">
-            <input type="text" id="shop" placeholder="購入店">
-            <input type="file" id="imgFile" accept="image/*">
             <input type="hidden" id="edit-index" value="-1">
+            <input type="hidden" id="img-url">
         </div>
-        <div class="btn-row">
-            <button class="btn-save" onclick="saveItem()">保存する</button>
-            <button id="cancel-btn" style="display:none;" onclick="resetForm()">キャンセル</button>
+        <div style="margin-top:15px; display:flex; gap:10px;">
+            <button class="btn btn-success" style="flex:2;" onclick="saveItem()">リストに保存する</button>
+            <button class="btn btn-ghost" onclick="resetForm()">リセット</button>
         </div>
     </div>
 
     <div class="controls">
-        <input type="text" class="search-box" id="search" placeholder="キーワードで検索..." oninput="render()">
-        <button class="filter-btn active" onclick="setFilter('all', this)">すべて</button>
-        <button class="filter-btn" onclick="setFilter('book', this)">本</button>
-        <button class="filter-btn" onclick="setFilter('cd', this)">CD</button>
-        <button class="filter-btn" onclick="setFilter('record', this)">レコード</button>
+        <input type="text" id="search" placeholder="タイトル・場所・状態で絞り込み..." style="flex:2; padding:10px;" oninput="render()">
+        <button class="btn btn-ghost" onclick="exportData()">バックアップ保存</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">データ復元</button>
+        <input type="file" id="importFile" style="display:none;" onchange="importData(event)">
     </div>
 
-    <div id="item-list" class="item-list"></div>
+    <div id="list" style="border-radius: 15px; overflow: hidden; border: 1px solid #eee;"></div>
 </div>
 
 <script>
-    let items = JSON.parse(localStorage.getItem('my_collection_v2')) || [];
-    let currentFilter = 'all';
-    let chartInstance = null;
+    let items = JSON.parse(localStorage.getItem('my_col_master_v3')) || [];
+    let pieChart = null, lineChart = null;
 
-    // 保存処理
-    async function saveItem() {
-        const title = document.getElementById('title').value;
+    // --- 1. 自動情報取得 (Google Books & MusicBrainz) ---
+    async function autoFetch() {
+        const input = document.getElementById('api-input').value.trim().replace(/-/g, '');
+        const type = document.getElementById('type').value;
+        if (!input) return alert("番号を入力してください");
+
+        try {
+            if (type === 'book') {
+                // 本の場合：Google Books API
+                const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${input}`);
+                const data = await res.json();
+                if (data.totalItems > 0) {
+                    const info = data.items[0].volumeInfo;
+                    document.getElementById('title').value = info.title;
+                    document.getElementById('creator').value = info.authors ? info.authors.join(', ') : '';
+                    document.getElementById('img-url').value = info.imageLinks ? info.imageLinks.thumbnail : '';
+                } else alert("本が見つかりませんでした");
+            } else {
+                // 音楽の場合：MusicBrainz API
+                const res = await fetch(`https://musicbrainz.org/ws/2/release/?query=barcode:${input}%20OR%20catno:${input}&fmt=json`);
+                const data = await res.json();
+                if (data.releases && data.releases.length > 0) {
+                    const info = data.releases[0];
+                    document.getElementById('title').value = info.title;
+                    document.getElementById('creator').value = info['artist-credit'] ? info['artist-credit'][0].name : '';
+                    document.getElementById('img-url').value = ''; // MusicBrainzは画像取得が別経路のため
+                    alert("音楽情報を取得しました！(画像は手動または後ほど)");
+                } else alert("CD/レコードが見つかりませんでした。規格品番もお試しください。");
+            }
+        } catch (e) { alert("API接続エラーが発生しました"); }
+    }
+
+    // --- 2. 保存・管理 ---
+    function saveItem() {
         const index = parseInt(document.getElementById('edit-index').value);
-        if (!title) return alert('タイトルを入力してください');
-
-        const file = document.getElementById('imgFile').files[0];
-        let imgBase64 = index >= 0 ? items[index].img : '';
-        
-        if (file) {
-            imgBase64 = await toBase64(file);
-        }
-
         const item = {
             type: document.getElementById('type').value,
-            title: title,
+            title: document.getElementById('title').value,
             creator: document.getElementById('creator').value,
             price: parseInt(document.getElementById('price').value) || 0,
+            location: document.getElementById('location').value || '未定',
+            condition: document.getElementById('condition').value,
             date: document.getElementById('date').value || new Date().toISOString().split('T')[0],
-            shop: document.getElementById('shop').value || '不明',
-            img: imgBase64
+            img: document.getElementById('img-url').value || ''
         };
 
-        if (index === -1) items.push(item);
+        if (!item.title) return alert("タイトルは必須です");
+
+        if (index === -1) items.unshift(item); // 常に最新を上に
         else items[index] = item;
 
-        localStorage.setItem('my_collection_v2', JSON.stringify(items));
+        localStorage.setItem('my_col_master_v3', JSON.stringify(items));
         resetForm();
         render();
     }
 
-    // 画像変換
-    const toBase64 = file => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
-
     function deleteItem(index) {
-        if (confirm('削除しますか？')) {
-            items.splice(index, 1);
-            localStorage.setItem('my_collection_v2', JSON.stringify(items));
-            render();
-        }
+        if(confirm('削除しますか？')) { items.splice(index,1); localStorage.setItem('my_col_master_v3', JSON.stringify(items)); render(); }
     }
 
-    function editItem(index) {
-        const item = items[index];
-        document.getElementById('type').value = item.type;
-        document.getElementById('title').value = item.title;
-        document.getElementById('creator').value = item.creator;
-        document.getElementById('price').value = item.price;
-        document.getElementById('date').value = item.date;
-        document.getElementById('shop').value = item.shop;
-        document.getElementById('edit-index').value = index;
-        document.getElementById('form-title').innerText = '編集モード';
-        document.getElementById('cancel-btn').style.display = 'block';
-        window.scrollTo(0,0);
+    // --- 3. 描画とグラフ ---
+    function render() {
+        const list = document.getElementById('list');
+        const query = document.getElementById('search').value.toLowerCase();
+        list.innerHTML = '';
+
+        let counts = {book:0, cd:0, record:0, other:0};
+        let monthlySpend = {};
+
+        items.forEach((item, index) => {
+            counts[item.type] = (counts[item.type] || 0) + 1;
+            const month = item.date.substring(0, 7);
+            monthlySpend[month] = (monthlySpend[month] || 0) + item.price;
+
+            if (item.title.toLowerCase().includes(query) || item.location.toLowerCase().includes(query) || item.creator.toLowerCase().includes(query)) {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                const typeColors = {book:'#3498db', cd:'#9b59b6', record:'#e67e22', other:'#95a5a6'};
+                card.innerHTML = `
+                    <img src="${item.img || 'https://via.placeholder.com/100?text=No+Image'}" class="item-img">
+                    <div class="item-main">
+                        <span class="tag" style="background:${typeColors[item.type]}">${item.type}</span>
+                        <span class="tag" style="background:#636e72">${item.condition}</span>
+                        <div style="font-weight:bold; font-size:1.1em; margin-top:4px;">${item.title}</div>
+                        <div style="font-size:0.85em; color:#636e72; margin-top:2px;">👤 ${item.creator} | 📍 ${item.location} | 📅 ${item.date}</div>
+                    </div>
+                    <div style="font-weight:bold; font-size:1.2em; color:var(--success); margin:0 20px;">¥${item.price.toLocaleString()}</div>
+                    <button class="btn btn-ghost" style="padding:5px 10px;" onclick="deleteItem(${index})">🗑</button>
+                `;
+                list.appendChild(card);
+            }
+        });
+
+        if(items.length === 0) list.innerHTML = '<p style="text-align:center; padding:40px; color:#999;">データがありません。番号入力から始めましょう！</p>';
+        updateCharts(counts, monthlySpend);
     }
 
+    function updateCharts(counts, monthlySpend) {
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        if (pieChart) pieChart.destroy();
+        pieChart = new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['本', 'CD', 'レコード', 'その他'],
+                datasets: [{ data: [counts.book, counts.cd, counts.record, counts.other], backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#95a5a6'] }]
+            },
+            options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        const sortedMonths = Object.keys(monthlySpend).sort();
+        const lineCtx = document.getElementById('lineChart').getContext('2d');
+        if (lineChart) lineChart.destroy();
+        lineChart = new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: sortedMonths,
+                datasets: [{ label: '月間支出', data: sortedMonths.map(m => monthlySpend[m]), borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3 }]
+            },
+            options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+        });
+    }
+
+    // --- 4. ユーティリティ ---
     function resetForm() {
         document.getElementById('edit-index').value = "-1";
-        document.getElementById('form-title').innerText = '新規追加';
-        document.getElementById('cancel-btn').style.display = 'none';
-        document.querySelectorAll('input').forEach(i => i.value = '');
+        document.querySelectorAll('.form-grid input').forEach(i => i.value = '');
+        document.getElementById('img-url').value = '';
+        document.getElementById('api-input').value = '';
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
     }
 
-    function setFilter(type, btn) {
-        currentFilter = type;
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        render();
+    function exportData() {
+        const blob = new Blob([JSON.stringify(items)], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `my_collection_backup.json`;
+        a.click();
     }
 
-    function render() {
-        const list = document.getElementById('item-list');
-        const searchTxt = document.getElementById('search').value.toLowerCase();
-        list.innerHTML = '';
-
-        let total = 0;
-        let counts = { book: 0, cd: 0, record: 0 };
-
-        const filtered = items.filter(item => {
-            const matchFilter = currentFilter === 'all' || item.type === currentFilter;
-            const matchSearch = item.title.toLowerCase().includes(searchTxt) || item.creator.toLowerCase().includes(searchTxt);
-            return matchFilter && matchSearch;
-        });
-
-        filtered.forEach((item, index) => {
-            total += item.price;
-            counts[item.type]++;
-
-            const card = document.createElement('div');
-            card.className = 'item-card';
-            card.innerHTML = `
-                <img src="${item.img || 'https://via.placeholder.com/80'}" class="item-img">
-                <div class="item-info">
-                    <span class="item-category cat-${item.type}">${item.type}</span>
-                    <span class="item-title">${item.title}</span>
-                    <span class="item-meta">${item.creator} | ${item.shop} | ${item.date}</span>
-                </div>
-                <div class="item-price">¥${item.price.toLocaleString()}</div>
-                <div class="actions">
-                    <button class="btn-sm" onclick="editItem(${index})">📝</button>
-                    <button class="btn-sm" style="background:#ff7675;color:white;" onclick="deleteItem(${index})">🗑</button>
-                </div>
-            `;
-            list.appendChild(card);
-        });
-
-        document.getElementById('total-price').innerText = `¥${total.toLocaleString()}`;
-        document.getElementById('total-count').innerText = `${filtered.length} items`;
-        updateChart(counts);
+    function importData(e) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            items = JSON.parse(event.target.result);
+            localStorage.setItem('my_col_master_v3', JSON.stringify(items));
+            render();
+        };
+        reader.readAsText(e.target.files[0]);
     }
 
-    function updateChart(counts) {
-        const ctx = document.getElementById('typeChart').getContext('2d');
-        if (chartInstance) chartInstance.destroy();
-        chartInstance = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                datasets: [{
-                    data: [counts.book, counts.cd, counts.record],
-                    backgroundColor: ['#3498db', '#9b59b6', '#e67e22']
-                }]
-            },
-            options: { cutout: '70%', plugins: { legend: { display: false } } }
-        });
-    }
-
-    // 初回実行
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
     render();
 </script>
