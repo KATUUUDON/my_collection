@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Collection Master PRO (Full Fixed)</title>
+    <title>Collection Master PRO (Data Protection Ver.)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --bg: #f4f7f6; }
@@ -33,7 +33,7 @@
 <div class="container">
     <header style="text-align:center; margin-bottom:20px;">
         <h1 style="color:var(--primary); margin:0;">Collection Master PRO</h1>
-        <p style="color:#666;">識別コード・ゴミ箱・高速表示版</p>
+        <p style="color:#666;">識別コード完全復活 ＆ 5000件高速版</p>
     </header>
 
     <div id="sync-status" class="sync-status">同期中...</div>
@@ -120,7 +120,7 @@
                 const data = await res.json();
                 if (data.totalItems > 0) {
                     const info = data.items[0].volumeInfo;
-                    document.getElementById('title').value = info.title;
+                    document.getElementById('title').value = info.title || "";
                     document.getElementById('creator').value = info.authors ? info.authors.join(', ') : '';
                     document.getElementById('img-url').value = info.imageLinks ? info.imageLinks.thumbnail : '';
                 }
@@ -129,7 +129,7 @@
                 const data = await res.json();
                 if (data.releases && data.releases.length > 0) {
                     const info = data.releases[0];
-                    document.getElementById('title').value = info.title;
+                    document.getElementById('title').value = info.title || "";
                     document.getElementById('creator').value = info['artist-credit'] ? info['artist-credit'][0].name : '';
                 }
             }
@@ -145,7 +145,7 @@
             type: document.getElementById('type').value, 
             title: title, 
             creator: document.getElementById('creator').value.trim(),
-            code: document.getElementById('code-display').value || '',
+            code: document.getElementById('code-display').value.trim() || '', // ここで確実に保存
             price: parseInt(document.getElementById('price').value) || 0,
             shop: document.getElementById('shop').value || '不明',
             location: document.getElementById('location').value || '未定',
@@ -214,31 +214,12 @@
         updateCharts();
     }
 
-    function updateCharts() {
-        let counts = {book:0, cd:0, record:0, other:0};
-        let monthlySpend = {};
-        items.forEach(item => {
-            counts[item.type]++;
-            const month = item.date.substring(0, 7);
-            monthlySpend[month] = (monthlySpend[month] || 0) + item.price;
-        });
-
-        const pieCtx = document.getElementById('pieChart').getContext('2d');
-        if (pieChart) pieChart.destroy();
-        pieChart = new Chart(pieCtx, { type: 'doughnut', data: { labels:['本','CD','レコード','他'], datasets:[{data:[counts.book,counts.cd,counts.record,counts.other], backgroundColor:['#3498db','#9b59b6','#e67e22','#95a5a6']}] }, options: { maintainAspectRatio:false } });
-
-        const sortedMonths = Object.keys(monthlySpend).sort().slice(-6);
-        const lineCtx = document.getElementById('lineChart').getContext('2d');
-        if (lineChart) lineChart.destroy();
-        lineChart = new Chart(lineCtx, { type: 'line', data: { labels:sortedMonths, datasets:[{label:'支出', data:sortedMonths.map(m=>monthlySpend[m]), borderColor:'#27ae60', tension:0.3}] }, options: { maintainAspectRatio:false } });
-    }
-
     function editItem(index) {
         const item = items[index];
         document.getElementById('type').value = item.type;
         document.getElementById('title').value = item.title;
         document.getElementById('creator').value = item.creator;
-        document.getElementById('code-display').value = item.code || '';
+        document.getElementById('code-display').value = item.code || ''; // ★ここが重要！識別コードを呼び出す
         document.getElementById('price').value = item.price;
         document.getElementById('shop').value = item.shop;
         document.getElementById('location').value = item.location;
@@ -265,11 +246,31 @@
         document.getElementById('main-save-btn').innerText = "リストに保存してクラウド同期";
     }
 
+    function updateCharts() {
+        let counts = {book:0, cd:0, record:0, other:0};
+        let monthlySpend = {};
+        items.forEach(item => {
+            counts[item.type]++;
+            const month = item.date.substring(0, 7);
+            monthlySpend[month] = (monthlySpend[month] || 0) + item.price;
+        });
+
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        if (pieChart) pieChart.destroy();
+        pieChart = new Chart(pieCtx, { type: 'doughnut', data: { labels:['本','CD','レコード','他'], datasets:[{data:[counts.book,counts.cd,counts.record,counts.other], backgroundColor:['#3498db','#9b59b6','#e67e22','#95a5a6']}] }, options: { maintainAspectRatio:false } });
+
+        const sortedMonths = Object.keys(monthlySpend).sort().slice(-6);
+        const lineCtx = document.getElementById('lineChart').getContext('2d');
+        if (lineChart) lineChart.destroy();
+        lineChart = new Chart(lineCtx, { type: 'line', data: { labels:sortedMonths, datasets:[{label:'支出', data:sortedMonths.map(m=>monthlySpend[m]), borderColor:'#27ae60', tension:0.3}] }, options: { maintainAspectRatio:false } });
+    }
+
     loadData();
 </script>
 
 </body>
 </html>
+
 
 
 
