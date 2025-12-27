@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Collection Master PRO (Fixed Ver.)</title>
+    <title>Ultimate Collection Master PRO (Code Save Ver.)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --bg: #f4f7f6; }
@@ -33,7 +33,7 @@
 <div class="container">
     <header style="text-align:center; margin-bottom:20px;">
         <h1 style="color:var(--primary); margin:0;">Collection Master Cloud</h1>
-        <p style="color:#666;">夫婦共有・バグ修正済み最新版</p>
+        <p style="color:#666;">識別コード保存・バグ修正済み最新版</p>
     </header>
 
     <div id="sync-status" class="sync-status">クラウドから読み込み中...</div>
@@ -55,6 +55,7 @@
             </select>
             <input type="text" id="title" placeholder="タイトル（必須）">
             <input type="text" id="creator" placeholder="作者 / アーティスト">
+            <input type="text" id="code-display" placeholder="識別コード (ISBN等)">
             <input type="number" id="price" placeholder="価格（円）">
             <input type="text" id="shop" placeholder="購入店舗">
             <input type="text" id="location" placeholder="保管場所">
@@ -66,7 +67,7 @@
     </div>
 
     <div style="background:#fff; padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #eee;">
-        <input type="text" id="search" placeholder="キーワード・場所・店舗で検索..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render()">
+        <input type="text" id="search" placeholder="タイトル・店舗・場所・コードで検索..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render()">
         <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
             <span style="font-size:0.85em; font-weight:bold; color:#666;">並び替え:</span>
             <button class="btn btn-ghost" onclick="sortData('date', 'desc')">📅 新着順</button>
@@ -109,6 +110,10 @@
         const input = document.getElementById('api-input').value.trim().replace(/-/g, '');
         const type = document.getElementById('type').value;
         if (!input) return alert("番号を入力してください");
+        
+        // 取得したコードをあらかじめセットしておく
+        document.getElementById('code-display').value = input;
+
         try {
             if (type === 'book') {
                 const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${input}`);
@@ -143,7 +148,10 @@
         }
 
         const item = {
-            type: document.getElementById('type').value, title: title, creator: creator,
+            type: document.getElementById('type').value, 
+            title: title, 
+            creator: creator,
+            code: document.getElementById('code-display').value || '',
             price: parseInt(document.getElementById('price').value) || 0,
             shop: document.getElementById('shop').value || '不明',
             location: document.getElementById('location').value || '未定',
@@ -161,7 +169,7 @@
 
     function sortData(key, order) {
         items.sort((a, b) => {
-            let vA = a[key], vB = b[key];
+            let vA = a[key] || '', vB = b[key] || '';
             if (key === 'price') return order === 'asc' ? vA - vB : vB - vA;
             if (key === 'date') return order === 'asc' ? new Date(vA) - new Date(vB) : new Date(vB) - new Date(vA);
             return order === 'asc' ? vA.toString().localeCompare(vB) : vB.toString().localeCompare(vA);
@@ -169,7 +177,6 @@
         render();
     }
 
-    // ★重要修正：originalIndexを使ってズレを防止
     function render() {
         const list = document.getElementById('list');
         const query = document.getElementById('search').value.toLowerCase();
@@ -182,7 +189,9 @@
             const month = item.date.substring(0, 7);
             monthlySpend[month] = (monthlySpend[month] || 0) + item.price;
 
-            if (item.title.toLowerCase().includes(query) || item.shop.toLowerCase().includes(query) || item.location.toLowerCase().includes(query) || item.creator.toLowerCase().includes(query)) {
+            // 検索条件に「code」を追加
+            const searchTargets = [item.title, item.shop, item.location, item.creator, item.code || ''].join(' ').toLowerCase();
+            if (searchTargets.includes(query)) {
                 const card = document.createElement('div');
                 card.className = 'item-card';
                 const colors = {book:'#3498db', cd:'#9b59b6', record:'#e67e22', other:'#95a5a6'};
@@ -192,6 +201,7 @@
                         <span class="tag" style="background:${colors[item.type]}">${item.type}</span>
                         <div style="font-weight:bold;">${item.title}</div>
                         <div style="font-size:0.8em; color:#666;">👤 ${item.creator} | 🛒 ${item.shop} | 📍 ${item.location}</div>
+                        ${item.code ? `<div style="font-size:0.7em; color:#999;">🆔 ${item.code}</div>` : ''}
                     </div>
                     <div style="font-weight:bold; margin:0 10px;">¥${item.price.toLocaleString()}</div>
                     <div style="display:flex; gap:5px;">
@@ -210,6 +220,7 @@
         document.getElementById('type').value = item.type;
         document.getElementById('title').value = item.title;
         document.getElementById('creator').value = item.creator;
+        document.getElementById('code-display').value = item.code || '';
         document.getElementById('price').value = item.price;
         document.getElementById('shop').value = item.shop;
         document.getElementById('location').value = item.location;
@@ -253,5 +264,4 @@
 
 </body>
 </html>
-
 
