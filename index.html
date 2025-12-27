@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Collection Master PRO (High-Capacity Ver.)</title>
+    <title>Ultimate Collection Master PRO (Full Fixed)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --bg: #f4f7f6; }
@@ -15,8 +15,8 @@
         .form-section { background: #edf2f7; padding: 20px; border-radius: 15px; margin-bottom: 30px; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
         input, select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; width: 100%; box-sizing: border-box; }
-        .item-card { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; background: #fff; }
-        .item-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; margin-right: 15px; background: #eee; }
+        .item-card { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #eee; background: #fff; transition: 0.2s; }
+        .item-img { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; margin-right: 15px; background: #eee; border: 1px solid #ddd; }
         .item-main { flex-grow: 1; }
         .tag { font-size: 0.7em; padding: 3px 8px; border-radius: 4px; color: white; margin-right: 5px; font-weight: bold; }
         .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
@@ -33,7 +33,7 @@
 <div class="container">
     <header style="text-align:center; margin-bottom:20px;">
         <h1 style="color:var(--primary); margin:0;">Collection Master PRO</h1>
-        <p style="color:#666;">5000件対応・高速表示版</p>
+        <p style="color:#666;">識別コード・ゴミ箱・高速表示版</p>
     </header>
 
     <div id="sync-status" class="sync-status">同期中...</div>
@@ -67,7 +67,7 @@
     </div>
 
     <div style="background:#fff; padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #eee;">
-        <input type="text" id="search" placeholder="タイトル・店舗・コードで検索（入力すると全件から探します）" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
+        <input type="text" id="search" placeholder="タイトル・店舗・場所・コードで検索..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
         <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
             <span style="font-size:0.85em; font-weight:bold; color:#666;">並び替え:</span>
             <button class="btn btn-ghost" onclick="sortData('date', 'desc')">📅 新着順</button>
@@ -86,7 +86,7 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbz9Io-YZwOWxwzotMvkHYYTPHUosJ_ZQIEP8Nqze1taq2XwxZY5tPaGZ-iL_z92hGhTeA/exec";
 
     let items = [];
-    let displayLimit = 30; // 最初に見せる件数
+    let displayLimit = 30; 
     let pieChart = null, lineChart = null;
 
     async function loadData() {
@@ -111,9 +111,8 @@
     }
 
     async function autoFetch() {
-        const input = document.getElementById('api-api-input') ? document.getElementById('api-input').value.trim() : document.getElementById('api-input').value.trim().replace(/-/g, '');
+        const input = document.getElementById('api-input').value.trim().replace(/-/g, '');
         document.getElementById('code-display').value = input;
-        // (API取得コードは以前と同じため省略せず統合されています)
         const type = document.getElementById('type').value;
         try {
             if (type === 'book') {
@@ -143,7 +142,8 @@
         if (!title) return alert("タイトル必須");
 
         const item = {
-            type: document.getElementById('type').value, title: title, 
+            type: document.getElementById('type').value, 
+            title: title, 
             creator: document.getElementById('creator').value.trim(),
             code: document.getElementById('code-display').value || '',
             price: parseInt(document.getElementById('price').value) || 0,
@@ -157,7 +157,7 @@
         if (index === -1) items.unshift(item); else items[index] = item;
         await syncToCloud(); 
         resetForm();
-        render(true); // 保存後はトップに戻す
+        render(true); 
     }
 
     function sortData(key, order) {
@@ -167,11 +167,10 @@
             if (key === 'date') return order === 'asc' ? new Date(vA) - new Date(vB) : new Date(vB) - new Date(vA);
             return order === 'asc' ? vA.toString().localeCompare(vB) : vB.toString().localeCompare(vA);
         });
-        displayLimit = 30; // ソート後はリセット
+        displayLimit = 30;
         render();
     }
 
-    // ★重要：表示制限付き描画
     function render(resetLimit = false) {
         if (resetLimit) displayLimit = 30;
         const list = document.getElementById('list');
@@ -186,8 +185,6 @@
             
             if (searchTargets.includes(query)) {
                 filteredCount++;
-                
-                // 表示制限内、または検索中（検索時は全件出すか、多ければ制限）の場合のみHTML作成
                 if (displayedCount < displayLimit) {
                     displayedCount++;
                     const card = document.createElement('div');
@@ -197,22 +194,23 @@
                         <img src="${item.img || 'https://via.placeholder.com/100?text=No+Img'}" class="item-img">
                         <div class="item-main">
                             <span class="tag" style="background:${colors[item.type]}">${item.type}</span>
-                            <div style="font-weight:bold; font-size:0.95em;">${item.title}</div>
+                            <div style="font-weight:bold;">${item.title}</div>
                             <div style="font-size:0.8em; color:#666;">👤 ${item.creator} | 🛒 ${item.shop}</div>
+                            ${item.code ? `<div style="font-size:0.7em; color:#999;">🆔 ${item.code}</div>` : ''}
                         </div>
-                        <div style="font-size:0.9em; font-weight:bold; margin:0 10px;">¥${item.price.toLocaleString()}</div>
-                        <button class="btn btn-ghost" style="padding:5px 8px;" onclick="editItem(${originalIndex})">📝</button>
+                        <div style="font-weight:bold; margin:0 10px;">¥${item.price.toLocaleString()}</div>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn btn-ghost" onclick="editItem(${originalIndex})">📝</button>
+                            <button class="btn btn-ghost" style="color:red;" onclick="deleteItem(${originalIndex})">🗑</button>
+                        </div>
                     `;
                     list.appendChild(card);
                 }
             }
         });
 
-        // 「もっと見る」ボタンの制御
         const moreBtn = document.getElementById('load-more-container');
         moreBtn.style.display = (filteredCount > displayedCount) ? 'block' : 'none';
-        
-        // グラフ更新（グラフは常に全データで集計）
         updateCharts();
     }
 
@@ -229,7 +227,7 @@
         if (pieChart) pieChart.destroy();
         pieChart = new Chart(pieCtx, { type: 'doughnut', data: { labels:['本','CD','レコード','他'], datasets:[{data:[counts.book,counts.cd,counts.record,counts.other], backgroundColor:['#3498db','#9b59b6','#e67e22','#95a5a6']}] }, options: { maintainAspectRatio:false } });
 
-        const sortedMonths = Object.keys(monthlySpend).sort().slice(-6); // 直近6ヶ月
+        const sortedMonths = Object.keys(monthlySpend).sort().slice(-6);
         const lineCtx = document.getElementById('lineChart').getContext('2d');
         if (lineChart) lineChart.destroy();
         lineChart = new Chart(lineCtx, { type: 'line', data: { labels:sortedMonths, datasets:[{label:'支出', data:sortedMonths.map(m=>monthlySpend[m]), borderColor:'#27ae60', tension:0.3}] }, options: { maintainAspectRatio:false } });
@@ -252,6 +250,14 @@
         window.scrollTo({top:0, behavior:'smooth'});
     }
 
+    async function deleteItem(index) {
+        if(confirm('削除しますか？')) {
+            items.splice(index,1);
+            await syncToCloud();
+            render();
+        }
+    }
+
     function resetForm() {
         document.getElementById('edit-index').value = "-1";
         document.querySelectorAll('.form-grid input').forEach(i => i.value = '');
@@ -264,5 +270,6 @@
 
 </body>
 </html>
+
 
 
