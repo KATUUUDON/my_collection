@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Collection Master Pro</title>
+    <title>Ultimate Collection Master PRO (Cloud Sync)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --bg: #f4f7f6; }
@@ -24,6 +24,7 @@
         .btn-success { background: var(--success); color: white; }
         .btn-ghost { background: #e2e8f0; color: #4a5568; font-size: 0.85em; }
         .btn:hover { opacity: 0.8; }
+        .sync-status { text-align: right; font-size: 0.8em; color: #666; margin-bottom: 5px; }
         @media (max-width: 600px) { .item-card { flex-direction: column; text-align: center; } .item-img { margin-right: 0; } }
     </style>
 </head>
@@ -31,9 +32,11 @@
 
 <div class="container">
     <header style="text-align:center; margin-bottom:20px;">
-        <h1 style="color:var(--primary); margin:0;">Collection Master Pro</h1>
-        <p style="color:#666;">店舗管理・並び替え機能付き</p>
+        <h1 style="color:var(--primary); margin:0;">Collection Master Cloud</h1>
+        <p style="color:#666;">夫婦共有・スプレッドシート同期版</p>
     </header>
+
+    <div id="sync-status" class="sync-status">クラウドから読み込み中...</div>
 
     <div class="dashboard">
         <div class="card"><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
@@ -59,7 +62,7 @@
             <input type="date" id="date">
             <input type="hidden" id="edit-index" value="-1"><input type="hidden" id="img-url">
         </div>
-        <button id="main-save-btn" class="btn btn-success" style="width:100%; margin-top:15px;" onclick="saveItem()">リストに保存する</button>
+        <button id="main-save-btn" class="btn btn-success" style="width:100%; margin-top:15px;" onclick="saveItem()">リストに保存してクラウド同期</button>
     </div>
 
     <div style="background:#fff; padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #eee;">
@@ -76,8 +79,39 @@
 </div>
 
 <script>
-    let items = JSON.parse(localStorage.getItem('my_col_pro_v4')) || [];
+    // ★ここに取得した「ウェブアプリのURL」を貼り付けてください
+    const GAS_URL = "ここにあなたのURLを貼り付ける";
+
+    let items = [];
     let pieChart = null, lineChart = null;
+
+    // --- クラウドからデータを読み込む ---
+    async function loadData() {
+        try {
+            const res = await fetch(GAS_URL);
+            items = await res.json();
+            document.getElementById('sync-status').innerText = "✅ クラウドと同期済み";
+            render();
+        } catch (e) {
+            document.getElementById('sync-status').innerText = "❌ 同期エラー";
+            console.error(e);
+        }
+    }
+
+    // --- クラウドへ保存する ---
+    async function syncToCloud() {
+        document.getElementById('sync-status').innerText = "⏳ 保存中...";
+        try {
+            await fetch(GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify(items)
+            });
+            document.getElementById('sync-status').innerText = "✅ 保存完了";
+        } catch (e) {
+            document.getElementById('sync-status').innerText = "❌ 保存失敗";
+            alert("保存に失敗しました。ネット接続を確認してください。");
+        }
+    }
 
     async function autoFetch() {
         const input = document.getElementById('api-input').value.trim().replace(/-/g, '');
@@ -105,7 +139,7 @@
         } catch (e) { alert("取得エラー"); }
     }
 
-    function saveItem() {
+    async function saveItem() {
         const index = parseInt(document.getElementById('edit-index').value);
         const title = document.getElementById('title').value.trim();
         const creator = document.getElementById('creator').value.trim();
@@ -127,8 +161,10 @@
         };
 
         if (index === -1) items.unshift(item); else items[index] = item;
-        localStorage.setItem('my_col_pro_v4', JSON.stringify(items));
-        resetForm(); render();
+        
+        await syncToCloud(); // クラウドに保存
+        resetForm();
+        render();
     }
 
     function sortData(key, order) {
@@ -165,8 +201,10 @@
                         <div style="font-size:0.8em; color:#666;">👤 ${item.creator} | 🛒 ${item.shop} | 📍 ${item.location}</div>
                     </div>
                     <div style="font-weight:bold; margin:0 10px;">¥${item.price.toLocaleString()}</div>
-                    <button class="btn btn-ghost" onclick="editItem(${index})">📝</button>
-                    <button class="btn btn-ghost" style="color:red;" onclick="deleteItem(${index})">🗑</button>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn btn-ghost" onclick="editItem(${index})">📝</button>
+                        <button class="btn btn-ghost" style="color:red;" onclick="deleteItem(${index})">🗑</button>
+                    </div>
                 `;
                 list.appendChild(card);
             }
@@ -186,11 +224,17 @@
         document.getElementById('date').value = item.date;
         document.getElementById('img-url').value = item.img;
         document.getElementById('edit-index').value = index;
-        document.getElementById('main-save-btn').innerText = "修正を保存する";
+        document.getElementById('main-save-btn').innerText = "修正してクラウドを更新";
         window.scrollTo({top:0, behavior:'smooth'});
     }
 
-    function deleteItem(index) { if(confirm('削除しますか？')) { items.splice(index,1); localStorage.setItem('my_col_pro_v4', JSON.stringify(items)); render(); } }
+    async function deleteItem(index) {
+        if(confirm('削除しますか？')) {
+            items.splice(index,1);
+            await syncToCloud();
+            render();
+        }
+    }
 
     function updateCharts(counts, monthlySpend) {
         const pieCtx = document.getElementById('pieChart').getContext('2d');
@@ -200,55 +244,20 @@
         const sortedMonths = Object.keys(monthlySpend).sort();
         const lineCtx = document.getElementById('lineChart').getContext('2d');
         if (lineChart) lineChart.destroy();
-        lineChart = new Chart(lineCtx, { type: 'line', data: { labels:sortedMonths, datasets:[{label:'支出', data:sortedMonths.map(m=>monthlySpend[m]), borderColor:'#27ae60', fill:true, tension:0.3}] }, options: { maintainAspectRatio:false } });
+        lineChart = new Chart(lineCtx, { type: 'line', data: { labels:sortedMonths, datasets:[{label:'月別支出', data:sortedMonths.map(m=>monthlySpend[m]), borderColor:'#27ae60', fill:true, tension:0.3}] }, options: { maintainAspectRatio:false } });
     }
 
     function resetForm() {
         document.getElementById('edit-index').value = "-1";
         document.querySelectorAll('.form-grid input').forEach(i => i.value = '');
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
-        document.getElementById('main-save-btn').innerText = "リストに保存する";
+        document.getElementById('main-save-btn').innerText = "リストに保存してクラウド同期";
     }
 
-    function render() {
-        const list = document.getElementById('list');
-        const query = document.getElementById('search').value.toLowerCase();
-        list.innerHTML = '';
-        let counts = {book:0, cd:0, record:0, other:0};
-        let monthlySpend = {};
-
-        items.forEach((item, index) => {
-            counts[item.type]++;
-            const month = item.date.substring(0, 7);
-            monthlySpend[month] = (monthlySpend[month] || 0) + item.price;
-
-            if (item.title.toLowerCase().includes(query) || item.shop.toLowerCase().includes(query) || item.location.toLowerCase().includes(query)) {
-                const card = document.createElement('div');
-                card.className = 'item-card';
-                const colors = {book:'#3498db', cd:'#9b59b6', record:'#e67e22', other:'#95a5a6'};
-                card.innerHTML = `
-                    <img src="${item.img || 'https://via.placeholder.com/100?text=No+Img'}" class="item-img">
-                    <div class="item-main">
-                        <span class="tag" style="background:${colors[item.type]}">${item.type}</span>
-                        <div style="font-weight:bold;">${item.title}</div>
-                        <div style="font-size:0.8em; color:#666;">👤 ${item.creator} | 🛒 ${item.shop} | 📍 ${item.location}</div>
-                    </div>
-                    <div style="font-weight:bold; margin:0 10px;">¥${item.price.toLocaleString()}</div>
-                    <div style="display:flex; gap:5px;">
-                        <button class="btn btn-ghost" onclick="editItem(${index})">📝</button>
-                        <button class="btn btn-ghost" style="color:red;" onclick="deleteItem(${index})">🗑</button>
-                    </div>
-                `;
-                list.appendChild(card);
-            }
-        });
-        updateCharts(counts, monthlySpend);
-    }
-    
+    // 初期起動
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
-    render();
+    loadData();
 </script>
 
 </body>
 </html>
-
