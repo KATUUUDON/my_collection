@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Collection Manager</title>
+    <title>Ultimate Collection Master</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --bg: #f4f7f6; }
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); padding: 20px; color: #333; margin: 0; }
+        body { font-family: sans-serif; background: var(--bg); padding: 20px; color: #333; margin: 0; }
         .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
         
         /* Dashboard */
@@ -21,13 +21,12 @@
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
         input, select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; width: 100%; box-sizing: border-box; }
         
-        /* List & Item Design */
-        .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; background: #fff; padding: 15px; border-radius: 10px; align-items: center; }
-        .item-card { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #eee; transition: 0.2s; background: #fff; }
+        /* List */
+        .item-card { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #eee; background: #fff; transition: 0.2s; }
         .item-card:hover { background: #fafafa; }
         .item-img { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; margin-right: 15px; background: #eee; border: 1px solid #ddd; }
         .item-main { flex-grow: 1; }
-        .tag { font-size: 0.7em; padding: 3px 8px; border-radius: 4px; color: white; margin-right: 5px; font-weight: bold; text-transform: uppercase; }
+        .tag { font-size: 0.7em; padding: 3px 8px; border-radius: 4px; color: white; margin-right: 5px; font-weight: bold; }
         
         /* Buttons */
         .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
@@ -35,10 +34,11 @@
         .btn-success { background: var(--success); color: white; }
         .btn-ghost { background: #e2e8f0; color: #4a5568; }
         .btn:hover { opacity: 0.8; }
+        .action-btns { display: flex; gap: 5px; margin-left: 10px; }
 
         @media (max-width: 600px) {
             .item-card { flex-direction: column; text-align: center; gap: 10px; }
-            .item-img { margin-right: 0; width: 100px; height: 100px; }
+            .item-img { margin-right: 0; width: 80px; height: 80px; }
         }
     </style>
 </head>
@@ -46,24 +46,24 @@
 
 <div class="container">
     <header style="text-align:center; margin-bottom:20px;">
-        <h1 style="color:var(--primary); margin:0;">Collection Master Pro</h1>
-        <p style="color:#666;">蔵書・CD・レコード一元管理システム</p>
+        <h1 style="color:var(--primary); margin:0;">Collection Master Ultra</h1>
+        <p style="color:#666;">重複防止 & 編集機能付き</p>
     </header>
 
     <div class="dashboard">
         <div class="card">
-            <h4 style="margin-top:0;">📊 所有カテゴリ内訳</h4>
+            <h4 style="margin-top:0;">📊 カテゴリ内訳</h4>
             <div class="chart-container"><canvas id="pieChart"></canvas></div>
         </div>
         <div class="card">
-            <h4 style="margin-top:0;">📈 月別投資額（円）</h4>
+            <h4 style="margin-top:0;">📈 月別投資額</h4>
             <div class="chart-container"><canvas id="lineChart"></canvas></div>
         </div>
     </div>
 
     <div class="form-section">
         <div class="api-row">
-            <input type="text" id="api-input" placeholder="ISBN(本) または バーコード/規格品番(CD/レコード) を入力...">
+            <input type="text" id="api-input" placeholder="ISBN(本) または バーコード/規格品番(音楽) を入力...">
             <button class="btn btn-primary" onclick="autoFetch()">自動取得</button>
         </div>
         
@@ -76,7 +76,7 @@
             </select>
             <input type="text" id="title" placeholder="タイトル（必須）">
             <input type="text" id="creator" placeholder="作者 / アーティスト">
-            <input type="number" id="price" placeholder="購入価格（円）">
+            <input type="number" id="price" placeholder="価格（円）">
             <input type="text" id="location" placeholder="保管場所（例：本棚A-1）">
             <select id="condition">
                 <option value="新品">新品</option>
@@ -88,26 +88,26 @@
             <input type="hidden" id="img-url">
         </div>
         <div style="margin-top:15px; display:flex; gap:10px;">
-            <button class="btn btn-success" style="flex:2;" onclick="saveItem()">リストに保存する</button>
+            <button id="main-save-btn" class="btn btn-success" style="flex:2;" onclick="saveItem()">リストに保存する</button>
             <button class="btn btn-ghost" onclick="resetForm()">リセット</button>
         </div>
     </div>
 
-    <div class="controls">
-        <input type="text" id="search" placeholder="タイトル・場所・状態で絞り込み..." style="flex:2; padding:10px;" oninput="render()">
-        <button class="btn btn-ghost" onclick="exportData()">バックアップ保存</button>
+    <div style="display:flex; gap:10px; margin-bottom:20px; align-items:center;">
+        <input type="text" id="search" placeholder="タイトル・場所などで検索..." style="flex:2; padding:10px; border-radius:8px; border:1px solid #ddd;" oninput="render()">
+        <button class="btn btn-ghost" onclick="exportData()">バックアップ</button>
         <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">データ復元</button>
         <input type="file" id="importFile" style="display:none;" onchange="importData(event)">
     </div>
 
-    <div id="list" style="border-radius: 15px; overflow: hidden; border: 1px solid #eee;"></div>
+    <div id="list" style="border-radius:15px; overflow: hidden; border: 1px solid #eee;"></div>
 </div>
 
 <script>
-    let items = JSON.parse(localStorage.getItem('my_col_master_v3')) || [];
+    let items = JSON.parse(localStorage.getItem('my_col_master_vfinal')) || [];
     let pieChart = null, lineChart = null;
 
-    // --- 1. 自動情報取得 (Google Books & MusicBrainz) ---
+    // --- 1. 自動情報取得 ---
     async function autoFetch() {
         const input = document.getElementById('api-input').value.trim().replace(/-/g, '');
         const type = document.getElementById('type').value;
@@ -115,7 +115,6 @@
 
         try {
             if (type === 'book') {
-                // 本の場合：Google Books API
                 const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${input}`);
                 const data = await res.json();
                 if (data.totalItems > 0) {
@@ -123,29 +122,38 @@
                     document.getElementById('title').value = info.title;
                     document.getElementById('creator').value = info.authors ? info.authors.join(', ') : '';
                     document.getElementById('img-url').value = info.imageLinks ? info.imageLinks.thumbnail : '';
-                } else alert("本が見つかりませんでした");
+                } else alert("見つかりませんでした");
             } else {
-                // 音楽の場合：MusicBrainz API
                 const res = await fetch(`https://musicbrainz.org/ws/2/release/?query=barcode:${input}%20OR%20catno:${input}&fmt=json`);
                 const data = await res.json();
                 if (data.releases && data.releases.length > 0) {
                     const info = data.releases[0];
                     document.getElementById('title').value = info.title;
                     document.getElementById('creator').value = info['artist-credit'] ? info['artist-credit'][0].name : '';
-                    document.getElementById('img-url').value = ''; // MusicBrainzは画像取得が別経路のため
-                    alert("音楽情報を取得しました！(画像は手動または後ほど)");
-                } else alert("CD/レコードが見つかりませんでした。規格品番もお試しください。");
+                    document.getElementById('img-url').value = '';
+                } else alert("データが見つかりませんでした");
             }
-        } catch (e) { alert("API接続エラーが発生しました"); }
+        } catch (e) { alert("APIエラーが発生しました"); }
     }
 
-    // --- 2. 保存・管理 ---
+    // --- 2. 保存・管理（修正 & 重複チェック） ---
     function saveItem() {
         const index = parseInt(document.getElementById('edit-index').value);
+        const title = document.getElementById('title').value.trim();
+        const creator = document.getElementById('creator').value.trim();
+
+        if (!title) return alert("タイトルは必須です");
+
+        // 新規登録時のみ重複チェック
+        if (index === -1) {
+            const isDuplicate = items.find(i => i.title.toLowerCase() === title.toLowerCase() && i.creator.toLowerCase() === creator.toLowerCase());
+            if (isDuplicate && !confirm(`【重複警告】\n「${title} / ${creator}」は既に登録されています。新たに追加しますか？`)) return;
+        }
+
         const item = {
             type: document.getElementById('type').value,
-            title: document.getElementById('title').value,
-            creator: document.getElementById('creator').value,
+            title: title,
+            creator: creator,
             price: parseInt(document.getElementById('price').value) || 0,
             location: document.getElementById('location').value || '未定',
             condition: document.getElementById('condition').value,
@@ -153,26 +161,41 @@
             img: document.getElementById('img-url').value || ''
         };
 
-        if (!item.title) return alert("タイトルは必須です");
-
-        if (index === -1) items.unshift(item); // 常に最新を上に
+        if (index === -1) items.unshift(item);
         else items[index] = item;
 
-        localStorage.setItem('my_col_master_v3', JSON.stringify(items));
+        localStorage.setItem('my_col_master_vfinal', JSON.stringify(items));
         resetForm();
         render();
     }
 
-    function deleteItem(index) {
-        if(confirm('削除しますか？')) { items.splice(index,1); localStorage.setItem('my_col_master_v3', JSON.stringify(items)); render(); }
+    // --- 3. 編集と削除 ---
+    function editItem(index) {
+        const item = items[index];
+        document.getElementById('type').value = item.type;
+        document.getElementById('title').value = item.title;
+        document.getElementById('creator').value = item.creator;
+        document.getElementById('price').value = item.price;
+        document.getElementById('location').value = item.location;
+        document.getElementById('condition').value = item.condition;
+        document.getElementById('date').value = item.date;
+        document.getElementById('img-url').value = item.img;
+        document.getElementById('edit-index').value = index;
+
+        document.getElementById('main-save-btn').innerText = "修正を保存する";
+        document.getElementById('main-save-btn').style.background = "#e67e22";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // --- 3. 描画とグラフ ---
+    function deleteItem(index) {
+        if(confirm('完全に削除しますか？')) { items.splice(index,1); localStorage.setItem('my_col_master_vfinal', JSON.stringify(items)); render(); }
+    }
+
+    // --- 4. 描画と分析 ---
     function render() {
         const list = document.getElementById('list');
         const query = document.getElementById('search').value.toLowerCase();
         list.innerHTML = '';
-
         let counts = {book:0, cd:0, record:0, other:0};
         let monthlySpend = {};
 
@@ -184,23 +207,24 @@
             if (item.title.toLowerCase().includes(query) || item.location.toLowerCase().includes(query) || item.creator.toLowerCase().includes(query)) {
                 const card = document.createElement('div');
                 card.className = 'item-card';
-                const typeColors = {book:'#3498db', cd:'#9b59b6', record:'#e67e22', other:'#95a5a6'};
+                const colors = {book:'#3498db', cd:'#9b59b6', record:'#e67e22', other:'#95a5a6'};
                 card.innerHTML = `
-                    <img src="${item.img || 'https://via.placeholder.com/100?text=No+Image'}" class="item-img">
+                    <img src="${item.img || 'https://via.placeholder.com/100?text=No+Img'}" class="item-img">
                     <div class="item-main">
-                        <span class="tag" style="background:${typeColors[item.type]}">${item.type}</span>
+                        <span class="tag" style="background:${colors[item.type]}">${item.type}</span>
                         <span class="tag" style="background:#636e72">${item.condition}</span>
                         <div style="font-weight:bold; font-size:1.1em; margin-top:4px;">${item.title}</div>
-                        <div style="font-size:0.85em; color:#636e72; margin-top:2px;">👤 ${item.creator} | 📍 ${item.location} | 📅 ${item.date}</div>
+                        <div style="font-size:0.85em; color:#636e72;">👤 ${item.creator} | 📍 ${item.location}</div>
                     </div>
-                    <div style="font-weight:bold; font-size:1.2em; color:var(--success); margin:0 20px;">¥${item.price.toLocaleString()}</div>
-                    <button class="btn btn-ghost" style="padding:5px 10px;" onclick="deleteItem(${index})">🗑</button>
+                    <div style="font-weight:bold; font-size:1.1em; color:var(--success); margin:0 15px;">¥${item.price.toLocaleString()}</div>
+                    <div class="action-btns">
+                        <button class="btn btn-ghost" style="padding:5px 10px;" onclick="editItem(${index})">📝</button>
+                        <button class="btn btn-ghost" style="padding:5px 10px; color:#e74c3c;" onclick="deleteItem(${index})">🗑</button>
+                    </div>
                 `;
                 list.appendChild(card);
             }
         });
-
-        if(items.length === 0) list.innerHTML = '<p style="text-align:center; padding:40px; color:#999;">データがありません。番号入力から始めましょう！</p>';
         updateCharts(counts, monthlySpend);
     }
 
@@ -209,11 +233,8 @@
         if (pieChart) pieChart.destroy();
         pieChart = new Chart(pieCtx, {
             type: 'doughnut',
-            data: {
-                labels: ['本', 'CD', 'レコード', 'その他'],
-                datasets: [{ data: [counts.book, counts.cd, counts.record, counts.other], backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#95a5a6'] }]
-            },
-            options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            data: { labels:['本','CD','レコード','その他'], datasets:[{data:[counts.book,counts.cd,counts.record,counts.other], backgroundColor:['#3498db','#9b59b6','#e67e22','#95a5a6']}] },
+            options: { maintainAspectRatio:false }
         });
 
         const sortedMonths = Object.keys(monthlySpend).sort();
@@ -221,36 +242,31 @@
         if (lineChart) lineChart.destroy();
         lineChart = new Chart(lineCtx, {
             type: 'line',
-            data: {
-                labels: sortedMonths,
-                datasets: [{ label: '月間支出', data: sortedMonths.map(m => monthlySpend[m]), borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3 }]
-            },
-            options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            data: { labels:sortedMonths, datasets:[{label:'支出(¥)', data:sortedMonths.map(m=>monthlySpend[m]), borderColor:'#27ae60', backgroundColor:'rgba(39,174,96,0.1)', fill:true, tension:0.3}] },
+            options: { maintainAspectRatio:false }
         });
     }
 
-    // --- 4. ユーティリティ ---
     function resetForm() {
         document.getElementById('edit-index').value = "-1";
         document.querySelectorAll('.form-grid input').forEach(i => i.value = '');
         document.getElementById('img-url').value = '';
-        document.getElementById('api-input').value = '';
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('main-save-btn').innerText = "リストに保存する";
+        document.getElementById('main-save-btn').style.background = "var(--success)";
     }
 
     function exportData() {
         const blob = new Blob([JSON.stringify(items)], {type: 'application/json'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `my_collection_backup.json`;
-        a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `collection_backup.json`; a.click();
     }
 
     function importData(e) {
         const reader = new FileReader();
         reader.onload = (event) => {
             items = JSON.parse(event.target.result);
-            localStorage.setItem('my_col_master_v3', JSON.stringify(items));
+            localStorage.setItem('my_col_master_vfinal', JSON.stringify(items));
             render();
         };
         reader.readAsText(e.target.files[0]);
@@ -262,4 +278,3 @@
 
 </body>
 </html>
-
