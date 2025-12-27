@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Collection Master PRO (Cloud Sync)</title>
+    <title>Ultimate Collection Master PRO (Cloud Sync)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --bg: #f4f7f6; }
@@ -79,8 +79,9 @@
 </div>
 
 <script>
-    // ★ここに取得した「ウェブアプリのURL」を貼り付けてください
-    const GAS_URL =https://script.google.com/macros/s/AKfycbz9Io-YZwOWxwzotMvkHYYTPHUosJ_ZQIEP8Nqze1taq2XwxZY5tPaGZ-iL_z92hGhTeA/exec
+    // クラウド同期用URL
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbz9Io-YZwOWxwzotMvkHYYTPHUosJ_ZQIEP8Nqze1taq2XwxZY5tPaGZ-iL_z92hGhTeA/exec";
+
     let items = [];
     let pieChart = null, lineChart = null;
 
@@ -146,7 +147,7 @@
 
         if (index === -1) {
             const isDuplicate = items.find(i => i.title.toLowerCase() === title.toLowerCase() && i.creator.toLowerCase() === creator.toLowerCase());
-            if (isDuplicate && !confirm("既にあります。追加しますか？")) return;
+            if (isDuplicate && !confirm("既に登録されています。追加しますか？")) return;
         }
 
         const item = {
@@ -161,7 +162,7 @@
 
         if (index === -1) items.unshift(item); else items[index] = item;
         
-        await syncToCloud(); // クラウドに保存
+        await syncToCloud(); 
         resetForm();
         render();
     }
@@ -171,7 +172,7 @@
             let vA = a[key], vB = b[key];
             if (key === 'price') return order === 'asc' ? vA - vB : vB - vA;
             if (key === 'date') return order === 'asc' ? new Date(vA) - new Date(vB) : new Date(vB) - new Date(vA);
-            return order === 'asc' ? vA.localeCompare(vB) : vB.localeCompare(vA);
+            return order === 'asc' ? vA.toString().localeCompare(vB) : vB.toString().localeCompare(vA);
         });
         render();
     }
