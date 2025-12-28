@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Collection Master PRO (Data Protection Ver.)</title>
+    <title>Collection Master PRO (Vinyl & Book Optimized)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --bg: #f4f7f6; }
@@ -33,7 +33,7 @@
 <div class="container">
     <header style="text-align:center; margin-bottom:20px;">
         <h1 style="color:var(--primary); margin:0;">Collection Master PRO</h1>
-        <p style="color:#666;">識別コード完全復活 ＆ 5000件高速版</p>
+        <p style="color:#666;">レコード品番・高速検索対応版</p>
     </header>
 
     <div id="sync-status" class="sync-status">同期中...</div>
@@ -55,7 +55,7 @@
             </select>
             <input type="text" id="title" placeholder="タイトル（必須）">
             <input type="text" id="creator" placeholder="作者 / アーティスト">
-            <input type="text" id="code-display" placeholder="識別コード (ISBN等)">
+            <input type="text" id="code-display" placeholder="識別コード (ISBN・規格品番等)">
             <input type="number" id="price" placeholder="価格（円）">
             <input type="text" id="shop" placeholder="購入店舗">
             <input type="text" id="location" placeholder="保管場所">
@@ -67,7 +67,7 @@
     </div>
 
     <div style="background:#fff; padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #eee;">
-        <input type="text" id="search" placeholder="タイトル・店舗・場所・コードで検索..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
+        <input type="text" id="search" placeholder="タイトル・品番（ハイフンなしOK）で全件検索..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
         <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
             <span style="font-size:0.85em; font-weight:bold; color:#666;">並び替え:</span>
             <button class="btn btn-ghost" onclick="sortData('date', 'desc')">📅 新着順</button>
@@ -111,12 +111,13 @@
     }
 
     async function autoFetch() {
-        const input = document.getElementById('api-input').value.trim().replace(/-/g, '');
+        const input = document.getElementById('api-input').value.trim();
         document.getElementById('code-display').value = input;
         const type = document.getElementById('type').value;
+        const cleanInput = input.replace(/-/g, '');
         try {
             if (type === 'book') {
-                const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${input}`);
+                const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanInput}`);
                 const data = await res.json();
                 if (data.totalItems > 0) {
                     const info = data.items[0].volumeInfo;
@@ -125,7 +126,7 @@
                     document.getElementById('img-url').value = info.imageLinks ? info.imageLinks.thumbnail : '';
                 }
             } else {
-                const res = await fetch(`https://musicbrainz.org/ws/2/release/?query=barcode:${input}%20OR%20catno:${input}&fmt=json`);
+                const res = await fetch(`https://musicbrainz.org/ws/2/release/?query=barcode:${cleanInput}%20OR%20catno:${input}&fmt=json`);
                 const data = await res.json();
                 if (data.releases && data.releases.length > 0) {
                     const info = data.releases[0];
@@ -145,7 +146,7 @@
             type: document.getElementById('type').value, 
             title: title, 
             creator: document.getElementById('creator').value.trim(),
-            code: document.getElementById('code-display').value.trim() || '', // ここで確実に保存
+            code: document.getElementById('code-display').value.trim() || '',
             price: parseInt(document.getElementById('price').value) || 0,
             shop: document.getElementById('shop').value || '不明',
             location: document.getElementById('location').value || '未定',
@@ -171,19 +172,33 @@
         render();
     }
 
+    // ★重要：英数字ゆらぎ対応検索機能
     function render(resetLimit = false) {
         if (resetLimit) displayLimit = 30;
         const list = document.getElementById('list');
         const query = document.getElementById('search').value.toLowerCase();
-        list.innerHTML = '';
         
+        // 検索ワードから記号を除去し、英数字のみにする
+        const queryAlphanumeric = query.replace(/[^a-z0-9]/g, ''); 
+        
+        list.innerHTML = '';
         let filteredCount = 0;
         let displayedCount = 0;
 
         items.forEach((item, originalIndex) => {
-            const searchTargets = [item.title, item.shop, item.location, item.creator, item.code || ''].join(' ').toLowerCase();
+            const itemCode = (item.code || '').toString().toLowerCase();
+            // 登録データから記号を除去し、英数字のみにする
+            const itemCodeAlphanumeric = itemCode.replace(/[^a-z0-9]/g, ''); 
             
-            if (searchTargets.includes(query)) {
+            const searchTargets = [item.title, item.shop, item.location, item.creator].join(' ').toLowerCase();
+            
+            // 判定ロジック：
+            // 1. 一般項目にヒットするか
+            // 2. 英数字のみで比較してヒットするか（P-10391W と p10391w が一致するようになる）
+            const isMatch = searchTargets.includes(query) || 
+                            (queryAlphanumeric !== "" && itemCodeAlphanumeric.includes(queryAlphanumeric));
+
+            if (isMatch) {
                 filteredCount++;
                 if (displayedCount < displayLimit) {
                     displayedCount++;
@@ -219,7 +234,7 @@
         document.getElementById('type').value = item.type;
         document.getElementById('title').value = item.title;
         document.getElementById('creator').value = item.creator;
-        document.getElementById('code-display').value = item.code || ''; // ★ここが重要！識別コードを呼び出す
+        document.getElementById('code-display').value = item.code || '';
         document.getElementById('price').value = item.price;
         document.getElementById('shop').value = item.shop;
         document.getElementById('location').value = item.location;
