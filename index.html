@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Collection Master PRO (Vinyl & Book Optimized)</title>
+    <title>Collection Master PRO (Ultimate Fixed)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --bg: #f4f7f6; }
@@ -32,8 +32,8 @@
 
 <div class="container">
     <header style="text-align:center; margin-bottom:20px;">
-        <h1 style="color:var(--primary); margin:0;">Collection Master PRO</h1>
-        <p style="color:#666;">レコード品番・高速検索対応版</p>
+        <h1 style="color:var(--primary); margin:0;">Collection Master Cloud</h1>
+        <p style="color:#666;">2026年対応・完全版</p>
     </header>
 
     <div id="sync-status" class="sync-status">同期中...</div>
@@ -67,7 +67,7 @@
     </div>
 
     <div style="background:#fff; padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #eee;">
-        <input type="text" id="search" placeholder="タイトル・品番（ハイフンなしOK）で全件検索..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
+        <input type="text" id="search" placeholder="タイトル・品番・作者などで検索..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
         <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
             <span style="font-size:0.85em; font-weight:bold; color:#666;">並び替え:</span>
             <button class="btn btn-ghost" onclick="sortData('date', 'desc')">📅 新着順</button>
@@ -112,9 +112,9 @@
 
     async function autoFetch() {
         const input = document.getElementById('api-input').value.trim();
-        document.getElementById('code-display').value = input;
-        const type = document.getElementById('type').value;
+        document.getElementById('code-display').value = input; // 入力したコードをセット
         const cleanInput = input.replace(/-/g, '');
+        const type = document.getElementById('type').value;
         try {
             if (type === 'book') {
                 const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanInput}`);
@@ -146,7 +146,7 @@
             type: document.getElementById('type').value, 
             title: title, 
             creator: document.getElementById('creator').value.trim(),
-            code: document.getElementById('code-display').value.trim() || '',
+            code: document.getElementById('code-display').value.trim() || '', // ★確実に保存
             price: parseInt(document.getElementById('price').value) || 0,
             shop: document.getElementById('shop').value || '不明',
             location: document.getElementById('location').value || '未定',
@@ -161,24 +161,10 @@
         render(true); 
     }
 
-    function sortData(key, order) {
-        items.sort((a, b) => {
-            let vA = a[key] || '', vB = b[key] || '';
-            if (key === 'price') return order === 'asc' ? vA - vB : vB - vA;
-            if (key === 'date') return order === 'asc' ? new Date(vA) - new Date(vB) : new Date(vB) - new Date(vA);
-            return order === 'asc' ? vA.toString().localeCompare(vB) : vB.toString().localeCompare(vA);
-        });
-        displayLimit = 30;
-        render();
-    }
-
-    // ★重要：英数字ゆらぎ対応検索機能
     function render(resetLimit = false) {
         if (resetLimit) displayLimit = 30;
         const list = document.getElementById('list');
         const query = document.getElementById('search').value.toLowerCase();
-        
-        // 検索ワードから記号を除去し、英数字のみにする
         const queryAlphanumeric = query.replace(/[^a-z0-9]/g, ''); 
         
         list.innerHTML = '';
@@ -187,14 +173,9 @@
 
         items.forEach((item, originalIndex) => {
             const itemCode = (item.code || '').toString().toLowerCase();
-            // 登録データから記号を除去し、英数字のみにする
             const itemCodeAlphanumeric = itemCode.replace(/[^a-z0-9]/g, ''); 
-            
             const searchTargets = [item.title, item.shop, item.location, item.creator].join(' ').toLowerCase();
             
-            // 判定ロジック：
-            // 1. 一般項目にヒットするか
-            // 2. 英数字のみで比較してヒットするか（P-10391W と p10391w が一致するようになる）
             const isMatch = searchTargets.includes(query) || 
                             (queryAlphanumeric !== "" && itemCodeAlphanumeric.includes(queryAlphanumeric));
 
@@ -234,7 +215,7 @@
         document.getElementById('type').value = item.type;
         document.getElementById('title').value = item.title;
         document.getElementById('creator').value = item.creator;
-        document.getElementById('code-display').value = item.code || '';
+        document.getElementById('code-display').value = item.code || ''; // ★確実に呼び出し
         document.getElementById('price').value = item.price;
         document.getElementById('shop').value = item.shop;
         document.getElementById('location').value = item.location;
@@ -246,40 +227,39 @@
         window.scrollTo({top:0, behavior:'smooth'});
     }
 
-    async function deleteItem(index) {
-        if(confirm('削除しますか？')) {
-            items.splice(index,1);
-            await syncToCloud();
-            render();
-        }
+    // (sortData, deleteItem, resetForm, updateCharts は以前と同じ)
+    function sortData(key, order) {
+        items.sort((a, b) => {
+            let vA = a[key] || '', vB = b[key] || '';
+            if (key === 'price') return order === 'asc' ? vA - vB : vB - vA;
+            if (key === 'date') return order === 'asc' ? new Date(vA) - new Date(vB) : new Date(vB) - new Date(vA);
+            return order === 'asc' ? vA.toString().localeCompare(vB) : vB.toString().localeCompare(vA);
+        });
+        displayLimit = 30; render();
     }
-
+    async function deleteItem(index) {
+        if(confirm('削除しますか？')) { items.splice(index,1); await syncToCloud(); render(); }
+    }
     function resetForm() {
         document.getElementById('edit-index').value = "-1";
         document.querySelectorAll('.form-grid input').forEach(i => i.value = '');
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
         document.getElementById('main-save-btn').innerText = "リストに保存してクラウド同期";
     }
-
     function updateCharts() {
-        let counts = {book:0, cd:0, record:0, other:0};
-        let monthlySpend = {};
+        let counts = {book:0, cd:0, record:0, other:0}; let monthlySpend = {};
         items.forEach(item => {
-            counts[item.type]++;
-            const month = item.date.substring(0, 7);
+            counts[item.type]++; const month = item.date.substring(0, 7);
             monthlySpend[month] = (monthlySpend[month] || 0) + item.price;
         });
-
         const pieCtx = document.getElementById('pieChart').getContext('2d');
         if (pieChart) pieChart.destroy();
         pieChart = new Chart(pieCtx, { type: 'doughnut', data: { labels:['本','CD','レコード','他'], datasets:[{data:[counts.book,counts.cd,counts.record,counts.other], backgroundColor:['#3498db','#9b59b6','#e67e22','#95a5a6']}] }, options: { maintainAspectRatio:false } });
-
         const sortedMonths = Object.keys(monthlySpend).sort().slice(-6);
         const lineCtx = document.getElementById('lineChart').getContext('2d');
         if (lineChart) lineChart.destroy();
         lineChart = new Chart(lineCtx, { type: 'line', data: { labels:sortedMonths, datasets:[{label:'支出', data:sortedMonths.map(m=>monthlySpend[m]), borderColor:'#27ae60', tension:0.3}] }, options: { maintainAspectRatio:false } });
     }
-
     loadData();
 </script>
 
