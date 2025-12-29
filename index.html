@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Collection Master PRO (Ultimate Sync)</title>
+<title>Collection Master PRO (Ultimate Edition)</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e74c3c; --bg: #f4f7f6; }
@@ -37,14 +37,14 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 <div class="container">
 <header style="text-align:center; margin-bottom:20px;">
 <h1 style="color:var(--primary); margin:0;">Collection Master PRO</h1>
-<p style="color:#666;">2026年・双方向データ連携 完全版</p>
+<p style="color:#666;">2026年・ダッシュボード完全版</p>
 </header>
 
 <div id="sync-status" class="sync-status">同期中...</div>
 
 <div class="dashboard">
-<div class="card"><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
-<div class="card"><div class="chart-container"><canvas id="lineChart"></canvas></div></div>
+    <div class="card"><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
+    <div class="card"><div class="chart-container"><canvas id="lineChart"></canvas></div></div>
 </div>
 
 <div class="form-section">
@@ -89,7 +89,7 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 
 <script>
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz9Io-YZwOWxwzotMvkHYYTPHUosJ_ZQIEP8Nqze1taq2XwxZY5tPaGZ-iL_z92hGhTeA/exec";
-let items = [], displayLimit = 30, pieChart = null;
+let items = [], displayLimit = 30, pieChart = null, lineChart = null;
 
 async function loadData() {
 try {
@@ -277,15 +277,51 @@ document.getElementById('edit-index').value="-1";
 document.querySelectorAll('#registration-form input').forEach(i=>{ if(i.id!=='type') i.value=''; });
 }
 
-function updateCharts(){
-let counts={book:0,cd:0,record:0,other:0};
-items.forEach(item=>{ counts[item.type]++; });
-const pieCtx=document.getElementById('pieChart').getContext('2d');
-if(pieChart) pieChart.destroy();
-pieChart=new Chart(pieCtx,{type:'doughnut',data:{labels:['本','CD','レコード','他'],datasets:[{data:[counts.book,counts.cd,counts.record,counts.other],backgroundColor:['#3498db','#9b59b6','#e67e22','#95a5a6']}]},options:{maintainAspectRatio:false}});
+function updateCharts() {
+    let counts = {book: 0, cd: 0, record: 0, other: 0};
+    let monthlySpend = {};
+    items.forEach(item => {
+        counts[item.type]++;
+        const month = (item.date || "").substring(0, 7);
+        if (month) monthlySpend[month] = (monthlySpend[month] || 0) + (parseInt(item.price) || 0);
+    });
+
+    // 1. 円グラフ
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    if (pieChart) pieChart.destroy();
+    pieChart = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['本', 'CD', 'レコード', '他'],
+            datasets: [{
+                data: [counts.book, counts.cd, counts.record, counts.other],
+                backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#95a5a6']
+            }]
+        },
+        options: { maintainAspectRatio: false, plugins: { title: { display: true, text: 'カテゴリ内訳' } } }
+    });
+
+    // 2. 折れ線グラフ
+    const lineCtx = document.getElementById('lineChart').getContext('2d');
+    if (lineChart) lineChart.destroy();
+    const sortedMonths = Object.keys(monthlySpend).sort().slice(-6);
+    lineChart = new Chart(lineCtx, {
+        type: 'line',
+        data: {
+            labels: sortedMonths,
+            datasets: [{
+                label: '支出 (円)',
+                data: sortedMonths.map(m => monthlySpend[m]),
+                borderColor: '#27ae60',
+                backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: { maintainAspectRatio: false, plugins: { title: { display: true, text: '月別支出トレンド' } } }
+    });
 }
 
-/* ---------- CSV保存(Export) ---------- */
 function exportCSV() {
 if (items.length === 0) return alert("データがありません。");
 const headers = ["種別", "タイトル", "作者/アーティスト", "コード", "価格", "購入店", "場所", "状態", "日付"];
@@ -306,7 +342,6 @@ link.download = `collection_backup_${new Date().toISOString().split('T')[0]}.csv
 link.click();
 }
 
-/* ---------- CSV読込(Import) ---------- */
 async function importCSV(input) {
 const file = input.files[0];
 if (!file) return;
@@ -317,7 +352,6 @@ const rows = text.split(/\r?\n/).filter(r => r.trim() !== "");
 if (rows.length < 2) return alert("データがありません。");
 const mapping = {"種別":"type","タイトル":"title","作者/アーティスト":"creator","コード":"code","価格":"price","購入店":"shop","場所":"location","状態":"condition","日付":"date"};
 const headers = rows[0].split(',').map(h => h.replace(/"/g, '').trim());
-
 const newItems = rows.slice(1).map(row => {
 const values = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
 const item = {};
@@ -332,26 +366,14 @@ item[key] = val;
 return item.title ? item : null;
 }).filter(i => i !== null);
 
-// ★ここでユーザーにモードを選択させる
-const mode = confirm(
-    `CSV読み込み：${newItems.length}件のデータが見つかりました。\n\n` +
-    `【OK】＝ 今のデータに「追加」する\n` +
-    `【キャンセル】＝ 今のデータを消して、Excelの内容に「入れ替える」\n\n` +
-    `※不足箇所を修正して戻す場合は「キャンセル（入れ替え）」を選んでください。`
-);
-
-let updatedList;
-if (mode) {
-    updatedList = [...items, ...newItems]; // 追加
-} else {
-    if(!confirm("本当に今のデータを消して、Excelの内容に入れ替えますか？")) return;
-    updatedList = newItems; // 入れ替え
-}
+const mode = confirm(`読込：${newItems.length}件見つかりました。\n\n【OK】＝ 追加\n【キャンセル】＝ 入れ替え(上書き)`);
+let updatedList = mode ? [...items, ...newItems] : newItems;
+if (!mode && !confirm("今のデータを消して入れ替えますか？")) return;
 
 const originalItems = [...items];
 items = updatedList;
-if (await syncToCloud()) { alert("読込と同期が完了しました！"); render(true); await loadData(); }
-else { items = originalItems; alert("同期失敗。元に戻しました。"); }
+if (await syncToCloud()) { alert("完了！"); render(true); await loadData(); }
+else { items = originalItems; alert("同期失敗"); }
 input.value = "";
 };
 reader.readAsText(file);
@@ -362,6 +384,7 @@ loadData();
 </script>
 </body>
 </html>
+
 
 
 
