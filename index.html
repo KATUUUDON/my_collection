@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Collection Master PRO (Full Sync & CSV)</title>
+<title>Collection Master PRO (Ultimate Sync)</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e74c3c; --bg: #f4f7f6; }
@@ -36,8 +36,8 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 <body>
 <div class="container">
 <header style="text-align:center; margin-bottom:20px;">
-<h1 style="color:var(--primary); margin:0;">Collection Master Cloud</h1>
-<p style="color:#666;">2026年・双方向CSV連携 搭載版</p>
+<h1 style="color:var(--primary); margin:0;">Collection Master PRO</h1>
+<p style="color:#666;">2026年・双方向データ連携 完全版</p>
 </header>
 
 <div id="sync-status" class="sync-status">同期中...</div>
@@ -192,7 +192,7 @@ async function syncToCloud(){
 document.getElementById('sync-status').innerText="⏳ サーバー通信中...";
 try{
 await fetch(GAS_URL,{method:'POST',body:JSON.stringify(items)});
-await new Promise(resolve=>setTimeout(resolve,1200));
+await new Promise(resolve=>setTimeout(resolve,1500));
 document.getElementById('sync-status').innerText="✅ 同期完了 ("+items.length+"件)";
 return true;
 }catch(e){ return false; }
@@ -285,7 +285,7 @@ if(pieChart) pieChart.destroy();
 pieChart=new Chart(pieCtx,{type:'doughnut',data:{labels:['本','CD','レコード','他'],datasets:[{data:[counts.book,counts.cd,counts.record,counts.other],backgroundColor:['#3498db','#9b59b6','#e67e22','#95a5a6']}]},options:{maintainAspectRatio:false}});
 }
 
-/* ---------- CSV保存 ---------- */
+/* ---------- CSV保存(Export) ---------- */
 function exportCSV() {
 if (items.length === 0) return alert("データがありません。");
 const headers = ["種別", "タイトル", "作者/アーティスト", "コード", "価格", "購入店", "場所", "状態", "日付"];
@@ -306,7 +306,7 @@ link.download = `collection_backup_${new Date().toISOString().split('T')[0]}.csv
 link.click();
 }
 
-/* ---------- CSV読込 ---------- */
+/* ---------- CSV読込(Import) ---------- */
 async function importCSV(input) {
 const file = input.files[0];
 if (!file) return;
@@ -317,6 +317,7 @@ const rows = text.split(/\r?\n/).filter(r => r.trim() !== "");
 if (rows.length < 2) return alert("データがありません。");
 const mapping = {"種別":"type","タイトル":"title","作者/アーティスト":"creator","コード":"code","価格":"price","購入店":"shop","場所":"location","状態":"condition","日付":"date"};
 const headers = rows[0].split(',').map(h => h.replace(/"/g, '').trim());
+
 const newItems = rows.slice(1).map(row => {
 const values = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
 const item = {};
@@ -331,10 +332,26 @@ item[key] = val;
 return item.title ? item : null;
 }).filter(i => i !== null);
 
-if (confirm(`${newItems.length}件のデータを追加し、クラウド同期しますか？`)) {
-items = [...newItems, ...items];
-if (await syncToCloud()) { alert("読込完了！"); render(true); await loadData(); }
+// ★ここでユーザーにモードを選択させる
+const mode = confirm(
+    `CSV読み込み：${newItems.length}件のデータが見つかりました。\n\n` +
+    `【OK】＝ 今のデータに「追加」する\n` +
+    `【キャンセル】＝ 今のデータを消して、Excelの内容に「入れ替える」\n\n` +
+    `※不足箇所を修正して戻す場合は「キャンセル（入れ替え）」を選んでください。`
+);
+
+let updatedList;
+if (mode) {
+    updatedList = [...items, ...newItems]; // 追加
+} else {
+    if(!confirm("本当に今のデータを消して、Excelの内容に入れ替えますか？")) return;
+    updatedList = newItems; // 入れ替え
 }
+
+const originalItems = [...items];
+items = updatedList;
+if (await syncToCloud()) { alert("読込と同期が完了しました！"); render(true); await loadData(); }
+else { items = originalItems; alert("同期失敗。元に戻しました。"); }
 input.value = "";
 };
 reader.readAsText(file);
@@ -345,6 +362,7 @@ loadData();
 </script>
 </body>
 </html>
+
 
 
 
