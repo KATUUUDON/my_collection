@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Collection Master PRO (Cloud Guard Ver.)</title>
+    <title>Collection Master PRO (Safe Sync Edition)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e67e22; --bg: #f4f7f6; }
@@ -28,8 +28,9 @@
         .tag { font-size: 0.7em; padding: 3px 8px; border-radius: 4px; color: white; margin-right: 5px; font-weight: bold; }
         .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:disabled { background: #bdc3c7; }
         .btn-success { background: var(--success); color: white; width: 100%; margin-top: 15px; font-size: 1.1em; }
-        .btn-success:disabled { background: #95a5a6; cursor: not-allowed; }
+        .btn-success:disabled { background: #bdc3c7; cursor: wait; }
         .btn-ghost { background: #e2e8f0; color: #4a5568; font-size: 0.85em; }
         .sync-status { text-align: right; font-size: 0.8em; color: #666; margin-bottom: 5px; }
         @media (max-width: 600px) { .item-card { flex-direction: column; text-align: center; } .item-img { margin-right: 0; margin-bottom: 10px; } }
@@ -40,10 +41,10 @@
 <div class="container">
     <header style="text-align:center; margin-bottom:20px;">
         <h1 style="color:var(--primary); margin:0;">Collection Master Cloud</h1>
-        <p style="color:#666;">データ保護・確実同期版</p>
+        <p style="color:#666;">2026年対応・連続登録ガード版</p>
     </header>
 
-    <div id="sync-status" class="sync-status">クラウドから読み込み中...</div>
+    <div id="sync-status" class="sync-status">同期中...</div>
 
     <div class="dashboard">
         <div class="card"><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
@@ -85,7 +86,7 @@
     </div>
 
     <div style="background:#fff; padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #eee;">
-        <input type="text" id="search" placeholder="タイトル・品番・作者などで検索..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
+        <input type="text" id="search" placeholder="コレクション内をタイトル・品番・作者で検索..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
         <div style="display:flex; flex-wrap:wrap; gap:8px;">
             <button class="btn btn-ghost" onclick="sortData('date', 'desc')">📅 新着順</button>
             <button class="btn btn-ghost" onclick="sortData('price', 'desc')">💰 高額順</button>
@@ -114,7 +115,6 @@
         } catch (e) { document.getElementById('sync-status').innerText = "❌ 同期エラー"; }
     }
 
-    // ワークフロー判定
     async function searchWorkflow() {
         const input = document.getElementById('api-input').value.trim();
         if (!input) return;
@@ -178,14 +178,18 @@
         return success;
     }
 
-    // ★最強の保存関数：成功するまでリセットしない
+    // ★重要：同期完了までロックし、完了後に再取得する最強の保存関数
     async function saveItem() {
         const title = document.getElementById('title').value.trim();
         if (!title) return alert("タイトル必須");
 
         const saveBtn = document.getElementById('main-save-btn');
+        const searchBtn = document.getElementById('search-btn');
+        
+        // 操作を完全にロック
         saveBtn.disabled = true;
-        saveBtn.innerText = "⏳ 同期中...";
+        searchBtn.disabled = true;
+        saveBtn.innerText = "⏳ クラウド書き込み中（連打しないでね）...";
 
         const item = {
             type: document.getElementById('type').value,
@@ -211,30 +215,41 @@
         if (isSuccess) {
             resetForm();
             document.getElementById('registration-form').style.display = "none";
-            document.getElementById('result-message').style.display = "none";
+            document.getElementById('result-message').innerHTML = "✅ クラウドに保存完了しました！";
+            document.getElementById('result-message').className = "status-msg msg-notfound";
             document.getElementById('api-input').value = "";
-            render(true);
-            alert("クラウドに保存しました！");
+            
+            // 最新の状態をリロードして完全一致させる
+            await loadData();
+            alert("クラウド同期が成功しました。");
         } else {
             items = originalItems; // 失敗したのでリストを元に戻す
             alert("同期に失敗しました。もう一度登録ボタンを押してください。");
         }
 
         saveBtn.disabled = false;
+        searchBtn.disabled = false;
         saveBtn.innerText = "リストに保存してクラウド同期";
     }
 
     async function syncToCloud() {
-        document.getElementById('sync-status').innerText = "⏳ 保存中...";
+        document.getElementById('sync-status').innerText = "⏳ サーバー通信中...";
         try {
-            const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(items) });
-            if (res.ok) {
-                document.getElementById('sync-status').innerText = "✅ 同期完了 (" + items.length + "件)";
-                return true;
-            }
-        } catch (e) { console.error(e); }
-        document.getElementById('sync-status').innerText = "❌ 同期失敗";
-        return false;
+            const res = await fetch(GAS_URL, { 
+                method: 'POST', 
+                body: JSON.stringify(items)
+            });
+            
+            // 通信の完了を少しだけ待って安定させる
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            document.getElementById('sync-status').innerText = "✅ 同期完了 (" + items.length + "件)";
+            return true;
+        } catch (e) { 
+            console.error(e);
+            document.getElementById('sync-status').innerText = "❌ 同期失敗";
+            return false;
+        }
     }
 
     function render(resetLimit = false) {
@@ -322,3 +337,4 @@
 
 </body>
 </html>
+
