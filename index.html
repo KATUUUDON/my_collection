@@ -1,174 +1,268 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Collection Master PRO - Complete</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-:root { --primary:#2c3e50; --accent:#3498db; --success:#27ae60; --bg:#f4f7f6; }
-body { margin:0; padding:20px; font-family:sans-serif; background:var(--bg); }
-.container { max-width:1100px; margin:auto; background:#fff; padding:25px; border-radius:20px; box-shadow:0 10px 40px rgba(0,0,0,.1); }
-.dashboard { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; margin-bottom:30px; }
-.card { border:1px solid #eee; border-radius:15px; padding:15px; }
-.chart-container { height:220px; }
-.form-section { background:#edf2f7; padding:20px; border-radius:15px; margin-bottom:30px; }
-.form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
-input,select { padding:10px; border-radius:6px; border:1px solid #cbd5e0; width:100%; }
-.btn { padding:10px 18px; border-radius:8px; border:none; cursor:pointer; font-weight:bold; }
-.btn-primary { background:var(--accent); color:#fff; }
-.btn-success { background:var(--success); color:#fff; width:100%; margin-top:15px; }
-.sync-status { text-align:right; font-size:.8em; color:#666; }
-.item-card { display:flex; align-items:center; padding:15px; border-bottom:1px solid #eee; }
-.item-img { width:70px; height:70px; object-fit:cover; border-radius:6px; margin-right:15px; background:#eee; }
-.item-main { flex-grow:1; }
-.tag { font-size:.7em; padding:3px 8px; border-radius:4px; color:#fff; font-weight:bold; }
-@media(max-width:600px){
-  .item-card{flex-direction:column;text-align:center;}
-  .item-img{margin:0 0 10px;}
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collection Master PRO (Ultimate Fixed)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --bg: #f4f7f6; }
+        body { font-family: sans-serif; background: var(--bg); padding: 20px; color: #333; margin: 0; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 15px; }
+        .chart-container { height: 220px; position: relative; }
+        .form-section { background: #edf2f7; padding: 20px; border-radius: 15px; margin-bottom: 30px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        input, select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; width: 100%; box-sizing: border-box; }
+        .item-card { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #eee; background: #fff; transition: 0.2s; }
+        .item-img { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; margin-right: 15px; background: #eee; border: 1px solid #ddd; }
+        .item-main { flex-grow: 1; }
+        .tag { font-size: 0.7em; padding: 3px 8px; border-radius: 4px; color: white; margin-right: 5px; font-weight: bold; }
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-ghost { background: #e2e8f0; color: #4a5568; font-size: 0.85em; }
+        .load-more-area { text-align: center; padding: 20px; }
+        .sync-status { text-align: right; font-size: 0.8em; color: #666; margin-bottom: 5px; }
+        @media (max-width: 600px) { .item-card { flex-direction: column; text-align: center; } .item-img { margin-right: 0; margin-bottom: 10px; } }
+    </style>
 </head>
-
 <body>
+
 <div class="container">
-<header style="text-align:center">
-<h1>Collection Master Cloud</h1>
-<p style="color:#666">完全安定版</p>
-</header>
+    <header style="text-align:center; margin-bottom:20px;">
+        <h1 style="color:var(--primary); margin:0;">Collection Master Cloud</h1>
+        <p style="color:#666;">2026年対応・完全版</p>
+    </header>
 
-<div id="sync-status" class="sync-status">同期中...</div>
+    <div id="sync-status" class="sync-status">同期中...</div>
 
-<div class="dashboard">
-  <div class="card"><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
-  <div class="card"><div class="chart-container"><canvas id="lineChart"></canvas></div></div>
-</div>
+    <div class="dashboard">
+        <div class="card"><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
+        <div class="card"><div class="chart-container"><canvas id="lineChart"></canvas></div></div>
+    </div>
 
-<div class="form-section">
-  <div style="display:flex;gap:10px;margin-bottom:15px;">
-    <input id="api-input" placeholder="ISBN / バーコード">
-    <button class="btn btn-primary" onclick="autoFetch()">自動取得</button>
-  </div>
+    <div class="form-section">
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <input type="text" id="api-input" placeholder="ISBN または バーコードを入力...">
+            <button class="btn btn-primary" onclick="autoFetch()">自動取得</button>
+        </div>
+        <div class="form-grid">
+            <select id="type">
+                <option value="book">📚 本</option><option value="cd">💿 CD</option>
+                <option value="record">🎸 レコード</option><option value="other">📦 その他</option>
+            </select>
+            <input type="text" id="title" placeholder="タイトル（必須）">
+            <input type="text" id="creator" placeholder="作者 / アーティスト">
+            <input type="text" id="code-display" placeholder="識別コード (ISBN・規格品番等)">
+            <input type="number" id="price" placeholder="価格（円）">
+            <input type="text" id="shop" placeholder="購入店舗">
+            <input type="text" id="location" placeholder="保管場所">
+            <select id="condition"><option value="新品">新品</option><option value="中古">中古</option><option value="未開封">未開封</option></select>
+            <input type="date" id="date">
+            <input type="hidden" id="edit-index" value="-1"><input type="hidden" id="img-url">
+        </div>
+        <button id="main-save-btn" class="btn btn-success" style="width:100%; margin-top:15px;" onclick="saveItem()">リストに保存してクラウド同期</button>
+    </div>
 
-  <div class="form-grid">
-    <select id="type">
-      <option value="book">📚 本</option>
-      <option value="cd">💿 CD</option>
-      <option value="record">🎸 レコード</option>
-      <option value="other">📦 その他</option>
-    </select>
-    <input id="title" placeholder="タイトル（必須）">
-    <input id="creator" placeholder="作者 / アーティスト">
-    <input id="code-display" placeholder="ISBN / 品番">
-    <input id="price" type="number" placeholder="価格">
-    <input id="shop" placeholder="購入店">
-    <input id="location" placeholder="保管場所">
-    <select id="condition"><option>新品</option><option>中古</option><option>未開封</option></select>
-    <input id="date" type="date">
-    <input type="hidden" id="edit-index" value="-1">
-    <input type="hidden" id="img-url">
-  </div>
+    <div style="background:#fff; padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #eee;">
+        <input type="text" id="search" placeholder="タイトル・品番・作者などで検索..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
+        <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+            <span style="font-size:0.85em; font-weight:bold; color:#666;">並び替え:</span>
+            <button class="btn btn-ghost" onclick="sortData('date', 'desc')">📅 新着順</button>
+            <button class="btn btn-ghost" onclick="sortData('price', 'desc')">💰 高額順</button>
+            <button class="btn btn-ghost" onclick="sortData('title', 'asc')">🔤 名前順</button>
+        </div>
+    </div>
 
-  <button id="main-save-btn" class="btn btn-success" onclick="saveItem()">
-    リストに保存してクラウド同期
-  </button>
-</div>
-
-<div id="list" style="border:1px solid #eee;border-radius:15px;overflow:hidden;"></div>
+    <div id="list" style="border-radius:15px; overflow: hidden; border: 1px solid #eee;"></div>
+    <div id="load-more-container" class="load-more-area" style="display:none;">
+        <button class="btn btn-ghost" onclick="displayLimit += 50; render();">さらに表示する（+50件）</button>
+    </div>
 </div>
 
 <script>
-const GAS_URL = "YOUR_GAS_URL";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbz9Io-YZwOWxwzotMvkHYYTPHUosJ_ZQIEP8Nqze1taq2XwxZY5tPaGZ-iL_z92hGhTeA/exec";
 
-let items = [];
-let pieChart=null, lineChart=null;
+    let items = [];
+    let displayLimit = 30; 
+    let pieChart = null, lineChart = null;
 
-/* ---------- Cloud ---------- */
-async function syncToCloud(){
-  document.getElementById('sync-status').innerText="⏳ 保存中...";
-  try{
-    const res = await fetch(GAS_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(items)
-    });
-    if(!res.ok) throw new Error();
-    const r = await res.json();
-    if(r.status!=="ok") throw new Error();
-    document.getElementById('sync-status').innerText=`✅ 保存完了 (${items.length}件)`;
-    return true;
-  }catch{
-    document.getElementById('sync-status').innerText="❌ 保存失敗";
-    alert("クラウド保存に失敗しました。\n入力内容は保持されています。");
-    return false;
-  }
-}
-
-/* ---------- Fetch ---------- */
-async function autoFetch(){
-  const input=document.getElementById('api-input').value.trim();
-  document.getElementById('code-display').value=input;
-  const clean=input.replace(/-/g,'');
-  try{
-    if(document.getElementById('type').value==="book"){
-      const r=await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${clean}`);
-      const d=await r.json();
-      if(d.items){
-        const i=d.items[0].volumeInfo;
-        title.value=i.title||"";
-        creator.value=i.authors?.join(', ')||"";
-        document.getElementById('img-url').value=i.imageLinks?.thumbnail||"";
-      }
+    async function loadData() {
+        try {
+            const res = await fetch(GAS_URL);
+            items = await res.json();
+            document.getElementById('sync-status').innerText = "✅ 同期済み (" + items.length + "件)";
+            render();
+        } catch (e) {
+            document.getElementById('sync-status').innerText = "❌ 同期エラー";
+        }
     }
-  }catch{ alert("取得失敗"); }
-}
 
-/* ---------- Save ---------- */
-async function saveItem(){
-  const titleVal=title.value.trim();
-  if(!titleVal) return alert("タイトル必須");
+    async function syncToCloud() {
+        document.getElementById('sync-status').innerText = "⏳ 保存中...";
+        try {
+            await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(items) });
+            document.getElementById('sync-status').innerText = "✅ 保存完了 (" + items.length + "件)";
+        } catch (e) {
+            document.getElementById('sync-status').innerText = "❌ 保存失敗";
+        }
+    }
 
-  const item={
-    type:type.value,title:titleVal,
-    creator:creator.value,code:code-display.value,
-    price:+price.value||0,shop:shop.value||"不明",
-    location:location.value||"未定",
-    condition:condition.value,
-    date:date.value||new Date().toISOString().slice(0,10),
-    img:document.getElementById('img-url').value
-  };
+    async function autoFetch() {
+        const input = document.getElementById('api-input').value.trim();
+        document.getElementById('code-display').value = input; // 入力したコードをセット
+        const cleanInput = input.replace(/-/g, '');
+        const type = document.getElementById('type').value;
+        try {
+            if (type === 'book') {
+                const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanInput}`);
+                const data = await res.json();
+                if (data.totalItems > 0) {
+                    const info = data.items[0].volumeInfo;
+                    document.getElementById('title').value = info.title || "";
+                    document.getElementById('creator').value = info.authors ? info.authors.join(', ') : '';
+                    document.getElementById('img-url').value = info.imageLinks ? info.imageLinks.thumbnail : '';
+                }
+            } else {
+                const res = await fetch(`https://musicbrainz.org/ws/2/release/?query=barcode:${cleanInput}%20OR%20catno:${input}&fmt=json`);
+                const data = await res.json();
+                if (data.releases && data.releases.length > 0) {
+                    const info = data.releases[0];
+                    document.getElementById('title').value = info.title || "";
+                    document.getElementById('creator').value = info['artist-credit'] ? info['artist-credit'][0].name : '';
+                }
+            }
+        } catch (e) { alert("取得エラー"); }
+    }
 
-  items.unshift(item);
-  if(await syncToCloud()){
-    resetForm(); render();
-  }
-}
+    async function saveItem() {
+        const index = parseInt(document.getElementById('edit-index').value);
+        const title = document.getElementById('title').value.trim();
+        if (!title) return alert("タイトル必須");
 
-/* ---------- UI ---------- */
-function resetForm(){
-  document.querySelectorAll('.form-grid input').forEach(i=>i.value="");
-  edit-index.value=-1;
-}
+        const item = {
+            type: document.getElementById('type').value, 
+            title: title, 
+            creator: document.getElementById('creator').value.trim(),
+            code: document.getElementById('code-display').value.trim() || '', // ★確実に保存
+            price: parseInt(document.getElementById('price').value) || 0,
+            shop: document.getElementById('shop').value || '不明',
+            location: document.getElementById('location').value || '未定',
+            condition: document.getElementById('condition').value,
+            date: document.getElementById('date').value || new Date().toISOString().split('T')[0],
+            img: document.getElementById('img-url').value || ''
+        };
 
-function render(){
-  const list=document.getElementById('list');
-  list.innerHTML="";
-  items.forEach((i)=>{
-    const div=document.createElement('div');
-    div.className='item-card';
-    div.innerHTML=`
-      <img class="item-img" src="${i.img||'https://via.placeholder.com/80'}">
-      <div class="item-main">
-        <span class="tag" style="background:#3498db">${i.type}</span>
-        <div><b>${i.title}</b></div>
-        <div style="font-size:.8em;color:#666">${i.creator}</div>
-      </div>
-      <div>¥${i.price.toLocaleString()}</div>`;
-    list.appendChild(div);
-  });
-}
+        if (index === -1) items.unshift(item); else items[index] = item;
+        await syncToCloud(); 
+        resetForm();
+        render(true); 
+    }
+
+    function render(resetLimit = false) {
+        if (resetLimit) displayLimit = 30;
+        const list = document.getElementById('list');
+        const query = document.getElementById('search').value.toLowerCase();
+        const queryAlphanumeric = query.replace(/[^a-z0-9]/g, ''); 
+        
+        list.innerHTML = '';
+        let filteredCount = 0;
+        let displayedCount = 0;
+
+        items.forEach((item, originalIndex) => {
+            const itemCode = (item.code || '').toString().toLowerCase();
+            const itemCodeAlphanumeric = itemCode.replace(/[^a-z0-9]/g, ''); 
+            const searchTargets = [item.title, item.shop, item.location, item.creator].join(' ').toLowerCase();
+            
+            const isMatch = searchTargets.includes(query) || 
+                            (queryAlphanumeric !== "" && itemCodeAlphanumeric.includes(queryAlphanumeric));
+
+            if (isMatch) {
+                filteredCount++;
+                if (displayedCount < displayLimit) {
+                    displayedCount++;
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    const colors = {book:'#3498db', cd:'#9b59b6', record:'#e67e22', other:'#95a5a6'};
+                    card.innerHTML = `
+                        <img src="${item.img || 'https://via.placeholder.com/100?text=No+Img'}" class="item-img">
+                        <div class="item-main">
+                            <span class="tag" style="background:${colors[item.type]}">${item.type}</span>
+                            <div style="font-weight:bold;">${item.title}</div>
+                            <div style="font-size:0.8em; color:#666;">👤 ${item.creator} | 🛒 ${item.shop}</div>
+                            ${item.code ? `<div style="font-size:0.7em; color:#999;">🆔 ${item.code}</div>` : ''}
+                        </div>
+                        <div style="font-weight:bold; margin:0 10px;">¥${item.price.toLocaleString()}</div>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn btn-ghost" onclick="editItem(${originalIndex})">📝</button>
+                            <button class="btn btn-ghost" style="color:red;" onclick="deleteItem(${originalIndex})">🗑</button>
+                        </div>
+                    `;
+                    list.appendChild(card);
+                }
+            }
+        });
+
+        const moreBtn = document.getElementById('load-more-container');
+        moreBtn.style.display = (filteredCount > displayedCount) ? 'block' : 'none';
+        updateCharts();
+    }
+
+    function editItem(index) {
+        const item = items[index];
+        document.getElementById('type').value = item.type;
+        document.getElementById('title').value = item.title;
+        document.getElementById('creator').value = item.creator;
+        document.getElementById('code-display').value = item.code || ''; // ★確実に呼び出し
+        document.getElementById('price').value = item.price;
+        document.getElementById('shop').value = item.shop;
+        document.getElementById('location').value = item.location;
+        document.getElementById('condition').value = item.condition;
+        document.getElementById('date').value = item.date;
+        document.getElementById('img-url').value = item.img;
+        document.getElementById('edit-index').value = index;
+        document.getElementById('main-save-btn').innerText = "修正して更新";
+        window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    // (sortData, deleteItem, resetForm, updateCharts は以前と同じ)
+    function sortData(key, order) {
+        items.sort((a, b) => {
+            let vA = a[key] || '', vB = b[key] || '';
+            if (key === 'price') return order === 'asc' ? vA - vB : vB - vA;
+            if (key === 'date') return order === 'asc' ? new Date(vA) - new Date(vB) : new Date(vB) - new Date(vA);
+            return order === 'asc' ? vA.toString().localeCompare(vB) : vB.toString().localeCompare(vA);
+        });
+        displayLimit = 30; render();
+    }
+    async function deleteItem(index) {
+        if(confirm('削除しますか？')) { items.splice(index,1); await syncToCloud(); render(); }
+    }
+    function resetForm() {
+        document.getElementById('edit-index').value = "-1";
+        document.querySelectorAll('.form-grid input').forEach(i => i.value = '');
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('main-save-btn').innerText = "リストに保存してクラウド同期";
+    }
+    function updateCharts() {
+        let counts = {book:0, cd:0, record:0, other:0}; let monthlySpend = {};
+        items.forEach(item => {
+            counts[item.type]++; const month = item.date.substring(0, 7);
+            monthlySpend[month] = (monthlySpend[month] || 0) + item.price;
+        });
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        if (pieChart) pieChart.destroy();
+        pieChart = new Chart(pieCtx, { type: 'doughnut', data: { labels:['本','CD','レコード','他'], datasets:[{data:[counts.book,counts.cd,counts.record,counts.other], backgroundColor:['#3498db','#9b59b6','#e67e22','#95a5a6']}] }, options: { maintainAspectRatio:false } });
+        const sortedMonths = Object.keys(monthlySpend).sort().slice(-6);
+        const lineCtx = document.getElementById('lineChart').getContext('2d');
+        if (lineChart) lineChart.destroy();
+        lineChart = new Chart(lineCtx, { type: 'line', data: { labels:sortedMonths, datasets:[{label:'支出', data:sortedMonths.map(m=>monthlySpend[m]), borderColor:'#27ae60', tension:0.3}] }, options: { maintainAspectRatio:false } });
+    }
+    loadData();
 </script>
+
 </body>
 </html>
 
