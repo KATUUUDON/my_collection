@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Collection Master PRO (完全版サクサク)</title>
+<title>Collection Master PRO (Full Sync & CSV)</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e74c3c; --bg: #f4f7f6; }
@@ -37,7 +37,7 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 <div class="container">
 <header style="text-align:center; margin-bottom:20px;">
 <h1 style="color:var(--primary); margin:0;">Collection Master Cloud</h1>
-<p style="color:#666;">2026年・ゴミ箱 ＆ 連続ガード 完全版</p>
+<p style="color:#666;">2026年・双方向CSV連携 搭載版</p>
 </header>
 
 <div id="sync-status" class="sync-status">同期中...</div>
@@ -55,23 +55,14 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 <div id="result-message" class="status-msg"></div>
 <div id="registration-form" style="display: none;">
 <div class="form-grid">
-<select id="type">
-<option value="book">📚 本</option>
-<option value="cd">💿 CD</option>
-<option value="record" selected>🎸 レコード</option>
-<option value="other">📦 その他</option>
-</select>
+<select id="type"><option value="book">📚 本</option><option value="cd">💿 CD</option><option value="record" selected>🎸 レコード</option><option value="other">📦 その他</option></select>
 <input type="text" id="title" placeholder="タイトル（必須）">
 <input type="text" id="creator" placeholder="作者 / アーティスト">
 <input type="text" id="code-display" placeholder="識別コード">
 <input type="number" id="price" placeholder="価格（円）">
 <input type="text" id="shop" placeholder="購入店舗">
 <input type="text" id="location" placeholder="保管場所">
-<select id="condition">
-<option value="新品">新品</option>
-<option value="中古">中古</option>
-<option value="未開封">未開封</option>
-</select>
+<select id="condition"><option value="新品">新品</option><option value="中古">中古</option><option value="未開封">未開封</option></select>
 <input type="date" id="date">
 <input type="hidden" id="edit-index" value="-1"><input type="hidden" id="img-url">
 </div>
@@ -81,9 +72,12 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 
 <div style="background:#fff; padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #eee;">
 <input type="text" id="search" placeholder="タイトル・品番・作者で検索..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
-<div style="display:flex; flex-wrap:wrap; gap:8px;">
+<div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
 <button class="btn btn-ghost" onclick="sortData('date', 'desc')">📅 新着順</button>
 <button class="btn btn-ghost" onclick="sortData('title', 'asc')">🔤 名前順</button>
+<button class="btn btn-primary" onclick="exportCSV()" style="margin-left:auto;">📥 保存(Export)</button>
+<button class="btn btn-ghost" onclick="document.getElementById('csv-import-input').click()">📤 読込(Import)</button>
+<input type="file" id="csv-import-input" style="display:none;" accept=".csv" onchange="importCSV(this)">
 </div>
 </div>
 
@@ -126,8 +120,7 @@ msgArea.innerText="🔍 ネット情報を取得しました。登録します�
 msgArea.className="status-msg msg-manual";
 msgArea.innerText="❓ 情報が見つかりません。手動で入力しますか？";
 }}
-msgArea.style.display="block";
-formArea.style.display="block";
+msgArea.style.display="block"; formArea.style.display="block";
 document.getElementById('edit-index').value="-1";
 document.getElementById('main-save-btn').innerText="クラウド同期して保存";
 formArea.scrollIntoView({behavior:'smooth',block:'center'});
@@ -171,8 +164,7 @@ const searchBtn=document.getElementById('search-btn');
 saveBtn.disabled=true; searchBtn.disabled=true;
 saveBtn.innerText="⏳ 同期中...";
 const item={
-type:document.getElementById('type').value,
-title:title,
+type:document.getElementById('type').value, title:title,
 creator:document.getElementById('creator').value.trim(),
 code:document.getElementById('code-display').value.trim(),
 price:parseInt(document.getElementById('price').value)||0,
@@ -187,12 +179,10 @@ const originalItems=[...items];
 if(index===-1) items.unshift(item); else items[index]=item;
 const isSuccess=await syncToCloud();
 if(isSuccess){
-resetForm();
-document.getElementById('registration-form').style.display="none";
+resetForm(); document.getElementById('registration-form').style.display="none";
 document.getElementById('result-message').style.display="none";
 document.getElementById('api-input').value="";
-render(true);
-await loadData();
+render(true); await loadData();
 }else{ items=originalItems; alert("同期失敗。やり直してください"); }
 saveBtn.disabled=false; searchBtn.disabled=false;
 saveBtn.innerText="クラウドに保存して同期";
@@ -295,11 +285,67 @@ if(pieChart) pieChart.destroy();
 pieChart=new Chart(pieCtx,{type:'doughnut',data:{labels:['本','CD','レコード','他'],datasets:[{data:[counts.book,counts.cd,counts.record,counts.other],backgroundColor:['#3498db','#9b59b6','#e67e22','#95a5a6']}]},options:{maintainAspectRatio:false}});
 }
 
+/* ---------- CSV保存 ---------- */
+function exportCSV() {
+if (items.length === 0) return alert("データがありません。");
+const headers = ["種別", "タイトル", "作者/アーティスト", "コード", "価格", "購入店", "場所", "状態", "日付"];
+const keys = ["type", "title", "creator", "code", "price", "shop", "location", "condition", "date"];
+const csvRows = items.map(item => {
+return keys.map(key => {
+let val = item[key] || "";
+let field = String(val).replace(/"/g, '""');
+return `"${field}"`;
+}).join(",");
+});
+const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+const csvContent = headers.join(",") + "\n" + csvRows.join("\n");
+const blob = new Blob([bom, csvContent], { type: "text/csv;charset=utf-8;" });
+const link = document.createElement("a");
+link.href = URL.createObjectURL(blob);
+link.download = `collection_backup_${new Date().toISOString().split('T')[0]}.csv`;
+link.click();
+}
+
+/* ---------- CSV読込 ---------- */
+async function importCSV(input) {
+const file = input.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = async (e) => {
+const text = e.target.result;
+const rows = text.split(/\r?\n/).filter(r => r.trim() !== "");
+if (rows.length < 2) return alert("データがありません。");
+const mapping = {"種別":"type","タイトル":"title","作者/アーティスト":"creator","コード":"code","価格":"price","購入店":"shop","場所":"location","状態":"condition","日付":"date"};
+const headers = rows[0].split(',').map(h => h.replace(/"/g, '').trim());
+const newItems = rows.slice(1).map(row => {
+const values = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
+const item = {};
+headers.forEach((h, i) => {
+const key = mapping[h];
+if (key) {
+let val = (values[i] || "").replace(/^"|"$/g, '').replace(/""/g, '"').trim();
+if (key === "price") val = parseInt(val) || 0;
+item[key] = val;
+}
+});
+return item.title ? item : null;
+}).filter(i => i !== null);
+
+if (confirm(`${newItems.length}件のデータを追加し、クラウド同期しますか？`)) {
+items = [...newItems, ...items];
+if (await syncToCloud()) { alert("読込完了！"); render(true); await loadData(); }
+}
+input.value = "";
+};
+reader.readAsText(file);
+}
+
 document.getElementById('date').value=new Date().toISOString().split('T')[0];
 loadData();
 </script>
 </body>
 </html>
+
 
 
 
