@@ -9,27 +9,21 @@
 :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e74c3c; --bg: #f4f7f6; }
 body { font-family: sans-serif; background: var(--bg); padding: 10px; color: #333; margin: 0; }
 .container { max-width: 1100px; margin: auto; background: white; padding: 15px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
-
 .dashboard { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
 @media (min-width: 768px) { .dashboard { display: grid; grid-template-columns: 1fr 1fr; } }
-
 .card { background: #fff; border: 1px solid #eee; padding: 12px; border-radius: 15px; height: 280px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; }
 .chart-container { flex-grow: 1; width: 100%; position: relative; min-height: 0; }
-
 .form-section { background: #edf2f7; padding: 15px; border-radius: 15px; margin-bottom: 20px; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
 input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 16px; }
-
 .status-msg { margin: 10px 0; padding: 12px; border-radius: 10px; font-weight: bold; text-align: center; display: none; line-height: 1.4; font-size: 0.9em; }
 .msg-found { background: #e8f4fd; color: #2980b9; border: 1px solid #3498db; }
-
 .item-card { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; background: #fff; }
 .item-img { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; margin-right: 12px; background: #eee; border: 1px solid #ddd; flex-shrink: 0; }
 .item-main { flex-grow: 1; min-width: 0; }
 .item-title { font-weight: bold; font-size: 1rem; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .item-info { font-size: 0.8em; color: #666; }
 .tag { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; color: white; margin-right: 5px; font-weight: bold; vertical-align: middle; }
-
 .btn { padding: 12px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
 .btn-primary { background: var(--accent); color: white; }
 .btn-success { background: var(--success); color: white; width: 100%; margin-top: 15px; font-size: 1.1em; }
@@ -37,7 +31,6 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 .btn-delete { color: var(--error); padding: 5px 10px; font-size: 1.2em; background: none; }
 .btn-edit { color: var(--accent); padding: 5px 10px; font-size: 1.2em; background: none; }
 .sync-status { text-align: right; font-size: 0.75em; color: #666; margin-bottom: 5px; }
-
 .load-more-area { text-align: center; padding: 20px 0; background: #fff; border-top: 1px solid #eee; }
 .btn-load-more { background: #f8fafc; color: var(--accent); border: 2px solid var(--accent); width: 80%; max-width: 300px; }
 </style>
@@ -48,14 +41,11 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 <h1 style="color:var(--primary); margin:0; font-size: 1.8em;">Collection Master PRO</h1>
 <p style="color:#666; font-size: 0.85em;">Ultimate Mobile Dashboard 2026</p>
 </header>
-
-<div id="sync-status" class="sync-status">同期中...</div>
-
+<div id="sync-status" class="sync-status">読み込み中...</div>
 <div class="dashboard">
     <div class="card"><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
     <div class="card"><div class="chart-container"><canvas id="lineChart"></canvas></div></div>
 </div>
-
 <div class="form-section">
 <div style="display: flex; gap: 8px; margin-bottom: 15px;">
 <input type="text" id="api-input" placeholder="ISBN または 品番を入力...">
@@ -73,13 +63,13 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 <input type="text" id="location" placeholder="保管場所">
 <select id="condition"><option value="新品">新品</option><option value="中古">中古</option><option value="未開封">未開封</option></select>
 <input type="date" id="date">
-<input type="hidden" id="edit-index" value="-1"><input type="hidden" id="img-url">
+<input type="hidden" id="edit-index" value="-1">
+<input type="hidden" id="img-url">
 </div>
 <button id="main-save-btn" class="btn btn-success" onclick="saveItem()">クラウドに保存して同期</button>
-<button class="btn btn-ghost" onclick="resetForm(); document.getElementById('registration-form').style.display='none';" style="width:100%; margin-top:10px;">キャンセル</button>
+<button class="btn btn-ghost" onclick="cancelEdit()" style="width:100%; margin-top:10px;">キャンセル</button>
 </div>
 </div>
-
 <div style="background:#fff; padding:12px; border-radius:12px; margin-bottom:20px; border:1px solid #eee;">
 <input type="text" id="search" placeholder="タイトル・品番・作者で検索..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
 <div style="display:flex; flex-wrap:wrap; gap:8px;">
@@ -88,108 +78,125 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 <button class="btn btn-primary" onclick="exportCSV()" style="margin-left:auto; font-size: 0.8em;">📥CSV保存</button>
 </div>
 </div>
-
 <div id="list" style="border-radius:15px; overflow: hidden; border: 1px solid #eee;"></div>
 <div id="load-more-container" class="load-more-area" style="display:none;">
     <button class="btn btn-load-more" onclick="loadMore()">さらに表示する</button>
 </div>
 </div>
-
 <script>
-// ★ここを自分のGASのURLに差し替える★
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz9Io-YZwOWxwzotMvkHYYTPHUosJ_ZQIEP8Nqze1taq2XwxZY5tPaGZ-iL_z92hGhTeA/exec";
-
 let items = [], displayLimit = 30, pieChart = null, lineChart = null;
 
 async function loadData() {
-try {
-const res = await fetch(GAS_URL);
-items = await res.json();
-document.getElementById('sync-status').innerText = "✅ 同期済み (" + items.length + "件)";
-render();
-} catch(e){ document.getElementById('sync-status').innerText = "❌ 同期エラー"; }
+    try {
+        const res = await fetch(GAS_URL);
+        const data = await res.json();
+        items = Array.isArray(data) ? data : [];
+        document.getElementById('sync-status').innerText = "✅ 同期済み (" + items.length + "件)";
+        render(true);
+    } catch(e){ 
+        document.getElementById('sync-status').innerText = "❌ 同期エラー"; 
+        console.error(e);
+    }
 }
 
 async function searchWorkflow() {
-const input = document.getElementById('api-input').value.trim();
-if(!input) return;
-const msgArea = document.getElementById('result-message');
-const formArea = document.getElementById('registration-form');
-const duplicate = items.find(i => (i.code||'').toString() === input);
-
-if(duplicate){
-msgArea.className="status-msg msg-found";
-msgArea.innerHTML=`⚠️ 登録済み：「${duplicate.title}」<br>追加で登録しますか？`;
-}
-
-await autoFetch(input);
-msgArea.style.display="block"; formArea.style.display="block";
-document.getElementById('edit-index').value="-1";
-document.getElementById('main-save-btn').innerText="クラウドに保存して同期";
-formArea.scrollIntoView({behavior:'smooth'});
+    const input = document.getElementById('api-input').value.trim();
+    if(!input) return;
+    resetForm(); // まずフォームをまっさらに
+    const msgArea = document.getElementById('result-message');
+    const formArea = document.getElementById('registration-form');
+    const duplicate = items.find(i => (i.code||'').toString() === input);
+    if(duplicate){
+        msgArea.className="status-msg msg-found";
+        msgArea.innerHTML=`⚠️ 登録済み：「${duplicate.title}」<br>追加で登録しますか？`;
+    }
+    await autoFetch(input);
+    msgArea.style.display="block"; 
+    formArea.style.display="block";
+    formArea.scrollIntoView({behavior:'smooth'});
 }
 
 async function autoFetch(input){
-document.getElementById('code-display').value=input;
-const cleanInput=input.replace(/-/g,'');
-const type=document.getElementById('type').value;
-try {
-if(type==='book'){
-const res=await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanInput}`);
-const data=await res.json();
-if(data.totalItems>0){
-const info=data.items[0].volumeInfo;
-document.getElementById('title').value=info.title||'';
-document.getElementById('creator').value=info.authors?info.authors.join(', '):'';
-document.getElementById('img-url').value=info.imageLinks?info.imageLinks.thumbnail:'';
-return true;
-}
-} else {
-const res=await fetch(`https://musicbrainz.org/ws/2/release/?query=barcode:${cleanInput}%20OR%20catno:${input}&fmt=json`);
-const data=await res.json();
-if(data.releases && data.releases.length>0){
-const info=data.releases[0];
-document.getElementById('title').value=info.title||'';
-document.getElementById('creator').value=info['artist-credit']?info['artist-credit'][0].name:'';
-return true;
-}
-}
-} catch(e){}
-return false;
+    document.getElementById('code-display').value=input;
+    const cleanInput=input.replace(/-/g,'');
+    const type=document.getElementById('type').value;
+    try {
+        if(type==='book'){
+            const res=await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanInput}`);
+            const data=await res.json();
+            if(data.totalItems>0){
+                const info=data.items[0].volumeInfo;
+                document.getElementById('title').value=info.title||'';
+                document.getElementById('creator').value=info.authors?info.authors.join(', '):'';
+                document.getElementById('img-url').value=info.imageLinks?info.imageLinks.thumbnail:'';
+            }
+        } else {
+            const res=await fetch(`https://musicbrainz.org/ws/2/release/?query=barcode:${cleanInput}%20OR%20catno:${input}&fmt=json`);
+            const data=await res.json();
+            if(data.releases && data.releases.length>0){
+                const info=data.releases[0];
+                document.getElementById('title').value=info.title||'';
+                document.getElementById('creator').value=info['artist-credit']?info['artist-credit'][0].name:'';
+            }
+        }
+    } catch(e){}
 }
 
 async function saveItem(){
-const title=document.getElementById('title').value.trim();
-if(!title) return alert("タイトル必須");
-const saveBtn=document.getElementById('main-save-btn');
-saveBtn.disabled=true;
-const item={
-type:document.getElementById('type').value, title:title,
-creator:document.getElementById('creator').value.trim(),
-code:document.getElementById('code-display').value.trim(),
-price:parseInt(document.getElementById('price').value)||0,
-shop:document.getElementById('shop').value||'',
-location:document.getElementById('location').value||'',
-condition:document.getElementById('condition').value,
-date:document.getElementById('date').value||new Date().toISOString().split('T')[0],
-img:document.getElementById('img-url').value||''
-};
-const index=parseInt(document.getElementById('edit-index').value);
-if(index===-1) items.unshift(item); else items[index]=item;
-if(await syncToCloud()){
-resetForm(); document.getElementById('registration-form').style.display="none";
-document.getElementById('result-message').style.display="none";
-render(true); await loadData();
-}
-saveBtn.disabled=false;
+    const title=document.getElementById('title').value.trim();
+    if(!title) return alert("タイトルを入力してください");
+    const saveBtn=document.getElementById('main-save-btn');
+    saveBtn.disabled=true;
+    saveBtn.innerText="⏳ 保存中...";
+
+    const item={
+        type:document.getElementById('type').value, 
+        title:title,
+        creator:document.getElementById('creator').value.trim(),
+        code:document.getElementById('code-display').value.trim(),
+        price:parseInt(document.getElementById('price').value)||0,
+        shop:document.getElementById('shop').value||'',
+        location:document.getElementById('location').value||'',
+        condition:document.getElementById('condition').value,
+        date:document.getElementById('date').value||new Date().toISOString().split('T')[0],
+        img:document.getElementById('img-url').value||''
+    };
+
+    const editIdx = parseInt(document.getElementById('edit-index').value);
+    if(editIdx === -1) {
+        items.unshift(item); // 新規は先頭へ
+    } else {
+        items[editIdx] = item; // 編集は上書き
+    }
+
+    if(await syncToCloud()){
+        document.getElementById('registration-form').style.display="none";
+        document.getElementById('result-message').style.display="none";
+        resetForm();
+        render(true);
+        alert("保存が完了しました！");
+    } else {
+        alert("クラウドへの保存に失敗しました。ネット接続を確認してください。");
+    }
+    saveBtn.disabled=false;
+    saveBtn.innerText="クラウドに保存して同期";
 }
 
 async function syncToCloud(){
-document.getElementById('sync-status').innerText="⏳ 同期中...";
-try{
-await fetch(GAS_URL,{method:'POST',body:JSON.stringify(items)});
-return true;
-}catch(e){ return false; }
+    document.getElementById('sync-status').innerText="⏳ 同期中...";
+    try{
+        const response = await fetch(GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify(items)
+        });
+        if(response.ok) {
+            document.getElementById('sync-status').innerText = "✅ 同期済み (" + items.length + "件)";
+            return true;
+        }
+    } catch(e){ console.error(e); }
+    document.getElementById('sync-status').innerText = "❌ 同期エラー";
+    return false;
 }
 
 function loadMore() {
@@ -198,76 +205,82 @@ function loadMore() {
 }
 
 function render(resetLimit=false){
-if(resetLimit) displayLimit = 30;
-const list=document.getElementById('list');
-const query=document.getElementById('search').value.toLowerCase();
-const colors={book:'#3498db',cd:'#9b59b6',record:'#e67e22',other:'#95a5a6'};
-list.innerHTML='';
-
-let filtered = items.filter(i => (i.title+(i.creator||"")+(i.code||"")).toLowerCase().includes(query));
-
-filtered.slice(0, displayLimit).forEach((item) => {
-const originalIndex = items.indexOf(item);
-const card=document.createElement('div');
-card.className='item-card';
-card.innerHTML=`
-<img src="${item.img||'https://via.placeholder.com/100?text=No+Img'}" class="item-img">
-<div class="item-main">
-<span class="tag" style="background:${colors[item.type]}">${item.type}</span>
-<div class="item-title">${item.title}</div>
-<div class="item-info">👤 ${item.creator || '不明'} | 📍 ${item.location || '-'}</div>
-</div>
-<div style="display:flex; flex-direction:column; gap:5px;">
-    <button class="btn-edit" onclick="editItem(${originalIndex})">📝</button>
-    <button class="btn-delete" onclick="deleteItem(${originalIndex})">🗑</button>
-</div>`;
-list.appendChild(card);
-});
-
-const loadMoreBtn = document.getElementById('load-more-container');
-if (filtered.length > displayLimit) {
-    loadMoreBtn.style.display = 'block';
-} else {
-    loadMoreBtn.style.display = 'none';
-}
-
-setTimeout(updateCharts, 300);
+    if(resetLimit) displayLimit = 30;
+    const list=document.getElementById('list');
+    const query=document.getElementById('search').value.toLowerCase();
+    const colors={book:'#3498db',cd:'#9b59b6',record:'#e67e22',other:'#95a5a6'};
+    list.innerHTML='';
+    let filtered = items.filter(i => (i.title+(i.creator||"")+(i.code||"")).toLowerCase().includes(query));
+    filtered.slice(0, displayLimit).forEach((item) => {
+        const originalIndex = items.indexOf(item);
+        const card=document.createElement('div');
+        card.className='item-card';
+        card.innerHTML=`
+        <img src="${item.img||'https://via.placeholder.com/100?text=No+Img'}" class="item-img">
+        <div class="item-main">
+        <span class="tag" style="background:${colors[item.type]}">${item.type}</span>
+        <div class="item-title">${item.title}</div>
+        <div class="item-info">👤 ${item.creator || '不明'} | 📍 ${item.location || '-'}</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:5px;">
+            <button class="btn-edit" onclick="editItem(${originalIndex})">📝</button>
+            <button class="btn-delete" onclick="deleteItem(${originalIndex})">🗑</button>
+        </div>`;
+        list.appendChild(card);
+    });
+    const loadMoreBtn = document.getElementById('load-more-container');
+    loadMoreBtn.style.display = filtered.length > displayLimit ? 'block' : 'none';
+    setTimeout(updateCharts, 300);
 }
 
 function editItem(index){
-const item=items[index];
-document.getElementById('registration-form').style.display="block";
-document.getElementById('result-message').style.display="none";
-document.getElementById('type').value=item.type;
-document.getElementById('title').value=item.title;
-document.getElementById('creator').value=item.creator;
-document.getElementById('code-display').value=item.code||'';
-document.getElementById('price').value=item.price;
-document.getElementById('shop').value=item.shop;
-document.getElementById('location').value=item.location;
-document.getElementById('condition').value=item.condition;
-document.getElementById('date').value=item.date;
-document.getElementById('img-url').value=item.img;
-document.getElementById('edit-index').value=index;
-document.getElementById('main-save-btn').innerText="修正を保存する";
-window.scrollTo({top:0,behavior:'smooth'});
+    const item=items[index];
+    document.getElementById('registration-form').style.display="block";
+    document.getElementById('result-message').style.display="none";
+    document.getElementById('type').value=item.type;
+    document.getElementById('title').value=item.title;
+    document.getElementById('creator').value=item.creator;
+    document.getElementById('code-display').value=item.code||'';
+    document.getElementById('price').value=item.price;
+    document.getElementById('shop').value=item.shop;
+    document.getElementById('location').value=item.location;
+    document.getElementById('condition').value=item.condition;
+    document.getElementById('date').value=item.date;
+    document.getElementById('img-url').value=item.img;
+    document.getElementById('edit-index').value=index;
+    document.getElementById('main-save-btn').innerText="修正を保存する";
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function cancelEdit() {
+    resetForm();
+    document.getElementById('registration-form').style.display='none';
+    document.getElementById('result-message').style.display='none';
 }
 
 function deleteItem(index){
-if(confirm(`「${items[index].title}」を削除しますか？`)){ 
-items.splice(index,1); syncToCloud().then(render); 
-}
+    if(confirm(`「${items[index].title}」を削除しますか？`)){ 
+        items.splice(index,1); 
+        syncToCloud().then(() => render(true)); 
+    }
 }
 
 function sortData(key,order){
-items.sort((a,b)=>order==='asc'?(a[key]||'').toString().localeCompare((b[key]||'').toString()):(b[key]||'').toString().localeCompare((a[key]||'').toString()));
-render(true);
+    items.sort((a,b)=>order==='asc'?(a[key]||'').toString().localeCompare((b[key]||'').toString()):(b[key]||'').toString().localeCompare((a[key]||'').toString()));
+    render(true);
 }
 
 function resetForm(){ 
-document.querySelectorAll('#registration-form input').forEach(i=>i.value=''); 
-document.getElementById('edit-index').value="-1";
-document.getElementById('main-save-btn').innerText="クラウドに保存して同期";
+    document.getElementById('edit-index').value = "-1";
+    document.getElementById('title').value = "";
+    document.getElementById('creator').value = "";
+    document.getElementById('code-display').value = "";
+    document.getElementById('price').value = "";
+    document.getElementById('shop').value = "";
+    document.getElementById('location').value = "";
+    document.getElementById('img-url').value = "";
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('main-save-btn').innerText = "クラウドに保存して同期";
 }
 
 function updateCharts() {
@@ -278,50 +291,29 @@ function updateCharts() {
         const m = (item.date || "").substring(0, 7);
         if (m && m.match(/^\d{4}-\d{2}$/)) monthlySpend[m] = (monthlySpend[m] || 0) + (parseInt(item.price) || 0);
     });
-
     const opt = { 
         responsive: true, maintainAspectRatio: false,
         layout: { padding: { bottom: 10 } },
-        plugins: { 
-            legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, font: { size: 10 } } } 
-        }
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, font: { size: 10 } } } }
     };
-
     if (pieChart) pieChart.destroy();
     pieChart = new Chart(document.getElementById('pieChart'), {
         type: 'doughnut',
         data: { 
             labels: ['本', 'CD', 'レコード', '他'], 
-            datasets: [{ 
-                data: [counts.book, counts.cd, counts.record, counts.other], 
-                backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#95a5a6'],
-                borderWidth: 1
-            }] 
+            datasets: [{ data: [counts.book, counts.cd, counts.record, counts.other], backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#95a5a6'], borderWidth: 1 }] 
         },
         options: { ...opt, plugins: { ...opt.plugins, title: { display: true, text: 'カテゴリ内訳' } } }
     });
-
     if (lineChart) lineChart.destroy();
     const sortedMonths = Object.keys(monthlySpend).sort().slice(-6);
     lineChart = new Chart(document.getElementById('lineChart'), {
         type: 'line',
         data: { 
             labels: sortedMonths, 
-            datasets: [{ 
-                label: '支出 (円)', 
-                data: sortedMonths.map(m => monthlySpend[m]), 
-                borderColor: '#27ae60', 
-                backgroundColor: 'rgba(39,174,96,0.1)', 
-                fill: true, 
-                tension: 0.4,
-                pointRadius: 4
-            }] 
+            datasets: [{ label: '支出 (円)', data: sortedMonths.map(m => monthlySpend[m]), borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.1)', fill: true, tension: 0.4, pointRadius: 4 }] 
         },
-        options: { 
-            ...opt, 
-            plugins: { ...opt.plugins, title: { display: true, text: '月別支出トレンド' }, legend: { display: false } }, 
-            scales: { y: { ticks: { font: { size: 9 }, callback: v => v.toLocaleString() } }, x: { ticks: { font: { size: 9 } } } } 
-        }
+        options: { ...opt, plugins: { ...opt.plugins, title: { display: true, text: '月別支出トレンド' }, legend: { display: false } }, scales: { y: { ticks: { font: { size: 9 }, callback: v => v.toLocaleString() } }, x: { ticks: { font: { size: 9 } } } } }
     });
 }
 
