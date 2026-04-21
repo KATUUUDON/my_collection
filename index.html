@@ -2,45 +2,53 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Collection Master PRO (Ultimate Edition)</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e74c3c; --bg: #f4f7f6; }
-body { font-family: sans-serif; background: var(--bg); padding: 20px; color: #333; margin: 0; }
-.container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
-.dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+body { font-family: sans-serif; background: var(--bg); padding: 10px; color: #333; margin: 0; }
+.container { max-width: 1100px; margin: auto; background: white; padding: 15px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
 
-/* カードとコンテナを完全に固定 */
-.card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 15px; height: 280px; box-sizing: border-box; overflow: hidden; position: relative; }
-.chart-container { height: 230px; width: 100%; position: relative; margin: 0 auto; }
+/* ダッシュボードのレイアウト調整（スマホ優先） */
+.dashboard { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+@media (min-width: 768px) { .dashboard { display: grid; grid-template-columns: 1fr 1fr; } }
 
-.form-section { background: #edf2f7; padding: 20px; border-radius: 15px; margin-bottom: 30px; }
-.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 16px; }
-.status-msg { margin: 15px 0; padding: 15px; border-radius: 10px; font-weight: bold; text-align: center; display: none; line-height: 1.6; }
+.card { background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 15px; height: 260px; box-sizing: border-box; position: relative; overflow: hidden; }
+.chart-container { height: 230px; width: 100%; position: relative; }
+
+.form-section { background: #edf2f7; padding: 15px; border-radius: 15px; margin-bottom: 20px; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+input, select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; }
+
+.status-msg { margin: 10px 0; padding: 12px; border-radius: 10px; font-weight: bold; text-align: center; display: none; font-size: 0.9em; }
 .msg-found { background: #e8f4fd; color: #2980b9; border: 1px solid #3498db; }
 .msg-notfound { background: #e9f7ef; color: #27ae60; border: 1px solid #2ecc71; }
 .msg-manual { background: #fff3e0; color: #e67e22; border: 1px solid #f39c12; }
-.item-card { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #eee; background: #fff; }
-.item-img { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; margin-right: 15px; background: #eee; border: 1px solid #ddd; }
-.item-main { flex-grow: 1; }
-.tag { font-size: 0.7em; padding: 3px 8px; border-radius: 4px; color: white; margin-right: 5px; font-weight: bold; }
-.btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+
+.item-card { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; background: #fff; }
+.item-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; margin-right: 12px; background: #eee; }
+.item-main { flex-grow: 1; min-width: 0; }
+.item-main div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tag { font-size: 0.65em; padding: 2px 6px; border-radius: 4px; color: white; margin-right: 4px; font-weight: bold; }
+
+.btn { padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
 .btn-primary { background: var(--accent); color: white; }
-.btn-success { background: var(--success); color: white; width: 100%; margin-top: 15px; font-size: 1.1em; }
-.btn-success:disabled { background: #bdc3c7; cursor: wait; }
-.btn-ghost { background: #e2e8f0; color: #4a5568; font-size: 0.85em; }
-.btn-delete { color: var(--error); padding: 5px 10px; font-size: 1.2em; }
-.sync-status { text-align: right; font-size: 0.8em; color: #666; margin-bottom: 5px; }
-@media (max-width: 600px) { .item-card { flex-direction: column; text-align: center; } .item-img { margin-right: 0; margin-bottom: 10px; } }
+.btn-success { background: var(--success); color: white; width: 100%; margin-top: 10px; font-size: 1em; }
+.btn-ghost { background: #e2e8f0; color: #4a5568; font-size: 0.8em; }
+.sync-status { text-align: right; font-size: 0.75em; color: #666; margin-bottom: 5px; }
+
+@media (max-width: 600px) { 
+  .item-card { flex-direction: row; text-align: left; }
+  header h1 { font-size: 1.5em; }
+}
 </style>
 </head>
 <body>
 <div class="container">
-<header style="text-align:center; margin-bottom:20px;">
+<header style="text-align:center; margin-bottom:15px;">
 <h1 style="color:var(--primary); margin:0;">Collection Master PRO</h1>
-<p style="color:#666;">2026年・ダッシュボード完全版</p>
+<p style="color:#666; font-size: 0.8em;">2026年・Mobile Optimized</p>
 </header>
 
 <div id="sync-status" class="sync-status">同期中...</div>
@@ -51,47 +59,45 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 </div>
 
 <div class="form-section">
-<div style="display: flex; gap: 10px; margin-bottom: 15px;">
-<input type="text" id="api-input" placeholder="ISBN または レコード品番を入力...">
-<button class="btn btn-primary" id="search-btn" onclick="searchWorkflow()">判定・取得</button>
+<div style="display: flex; gap: 8px; margin-bottom: 12px;">
+<input type="text" id="api-input" placeholder="ISBN/品番を入力...">
+<button class="btn btn-primary" id="search-btn" onclick="searchWorkflow()" style="white-space: nowrap;">判定</button>
 </div>
 <div id="result-message" class="status-msg"></div>
 <div id="registration-form" style="display: none;">
 <div class="form-grid">
 <select id="type"><option value="book">📚 本</option><option value="cd">💿 CD</option><option value="record" selected>🎸 レコード</option><option value="other">📦 その他</option></select>
 <input type="text" id="title" placeholder="タイトル（必須）">
-<input type="text" id="creator" placeholder="作者 / アーティスト">
+<input type="text" id="creator" placeholder="アーティスト">
 <input type="text" id="code-display" placeholder="識別コード">
-<input type="number" id="price" placeholder="価格（円）">
-<input type="text" id="shop" placeholder="購入店舗">
-<input type="text" id="location" placeholder="保管場所">
+<input type="number" id="price" placeholder="価格">
+<input type="text" id="shop" placeholder="購入店">
+<input type="text" id="location" placeholder="場所">
 <select id="condition"><option value="新品">新品</option><option value="中古">中古</option><option value="未開封">未開封</option></select>
 <input type="date" id="date">
 <input type="hidden" id="edit-index" value="-1"><input type="hidden" id="img-url">
 </div>
-<button id="main-save-btn" class="btn btn-success" onclick="saveItem()">クラウドに保存して同期</button>
+<button id="main-save-btn" class="btn btn-success" onclick="saveItem()">保存して同期</button>
 </div>
 </div>
 
-<div style="background:#fff; padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #eee;">
-<input type="text" id="search" placeholder="タイトル・品番・作者で検索..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
-<div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
-<button class="btn btn-ghost" onclick="sortData('date', 'desc')">📅 新着順</button>
-<button class="btn btn-ghost" onclick="sortData('title', 'asc')">🔤 名前順</button>
-<button class="btn btn-primary" onclick="exportCSV()" style="margin-left:auto;">📥 保存(Export)</button>
-<button class="btn btn-ghost" onclick="document.getElementById('csv-import-input').click()">📤 読込(Import)</button>
-<input type="file" id="csv-import-input" style="display:none;" accept=".csv" onchange="importCSV(this)">
+<div style="background:#fff; padding:10px; border-radius:12px; margin-bottom:15px; border:1px solid #eee;">
+<input type="text" id="search" placeholder="検索..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
+<div style="display:flex; flex-wrap:wrap; gap:5px;">
+<button class="btn btn-ghost" onclick="sortData('date', 'desc')">📅新着</button>
+<button class="btn btn-ghost" onclick="sortData('title', 'asc')">🔤名前</button>
+<button class="btn btn-primary" onclick="exportCSV()" style="margin-left:auto; font-size: 0.8em;">📥CSV</button>
 </div>
 </div>
 
 <div id="list" style="border-radius:15px; overflow: hidden; border: 1px solid #eee;"></div>
-<div id="load-more-container" class="load-more-area" style="display:none; text-align:center; padding:20px;">
-<button class="btn btn-ghost" onclick="displayLimit += 50; render();">さらに表示する</button>
+<div id="load-more-container" style="display:none; text-align:center; padding:15px;">
+<button class="btn btn-ghost" onclick="displayLimit += 50; render();">さらに表示</button>
 </div>
 </div>
 
 <script>
-// ★ここをご自身のGASのURLに差し替えてください★
+// ★ここを自分のGASのURLに差し替える★
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz9Io-YZwOWxwzotMvkHYYTPHUosJ_ZQIEP8Nqze1taq2XwxZY5tPaGZ-iL_z92hGhTeA/exec";
 
 let items = [], displayLimit = 30, pieChart = null, lineChart = null;
@@ -108,66 +114,41 @@ render();
 async function searchWorkflow() {
 const input = document.getElementById('api-input').value.trim();
 if(!input) return;
-const cleanInput = input.replace(/[^a-z0-9]/gi,'').toLowerCase();
 const msgArea = document.getElementById('result-message');
 const formArea = document.getElementById('registration-form');
-const duplicate = items.find(i => (i.code||'').toString().replace(/[^a-z0-9]/gi,'').toLowerCase()===cleanInput && cleanInput!=='');
+const duplicate = items.find(i => (i.code||'').toString() === input);
 if(duplicate){
 msgArea.className="status-msg msg-found";
-msgArea.innerHTML=`⚠️ 登録済み：「${duplicate.title}」<br>追加で登録しますか？`;
+msgArea.innerHTML=`⚠️ 登録済：「${duplicate.title}」`;
 }
-const foundOnline = await autoFetch(input);
-if(!duplicate){
-if(foundOnline){
-msgArea.className="status-msg msg-notfound";
-msgArea.innerText="🔍 ネット情報を取得しました。登録しますか？";
-}else{
-msgArea.className="status-msg msg-manual";
-msgArea.innerText="❓ 情報が見つかりません。手動で入力しますか？";
-}}
+await autoFetch(input);
 msgArea.style.display="block"; formArea.style.display="block";
 document.getElementById('edit-index').value="-1";
-document.getElementById('main-save-btn').innerText="クラウド同期して保存";
-formArea.scrollIntoView({behavior:'smooth',block:'center'});
+formArea.scrollIntoView({behavior:'smooth'});
 }
 
 async function autoFetch(input){
 document.getElementById('code-display').value=input;
-const cleanInput=input.replace(/-/g,'');
 const type=document.getElementById('type').value;
-let success=false;
 try{
 if(type==='book'){
-const res=await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanInput}`);
+const res=await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${input.replace(/-/g,'')}`);
 const data=await res.json();
 if(data.totalItems>0){
 const info=data.items[0].volumeInfo;
 document.getElementById('title').value=info.title||'';
 document.getElementById('creator').value=info.authors?info.authors.join(', '):'';
 document.getElementById('img-url').value=info.imageLinks?info.imageLinks.thumbnail:'';
-success=true;
-}
-}else{
-const res=await fetch(`https://musicbrainz.org/ws/2/release/?query=barcode:${cleanInput}%20OR%20catno:${input}&fmt=json`);
-const data=await res.json();
-if(data.releases && data.releases.length>0){
-const info=data.releases[0];
-document.getElementById('title').value=info.title||'';
-document.getElementById('creator').value=info['artist-credit']?info['artist-credit'][0].name:'';
-success=true;
 }
 }
-}catch(e){console.error(e);}
-return success;
+}catch(e){}
 }
 
 async function saveItem(){
 const title=document.getElementById('title').value.trim();
 if(!title) return alert("タイトル必須");
 const saveBtn=document.getElementById('main-save-btn');
-const searchBtn=document.getElementById('search-btn');
-saveBtn.disabled=true; searchBtn.disabled=true;
-saveBtn.innerText="⏳ 同期中...";
+saveBtn.disabled=true;
 const item={
 type:document.getElementById('type').value, title:title,
 creator:document.getElementById('creator').value.trim(),
@@ -180,25 +161,19 @@ date:document.getElementById('date').value||new Date().toISOString().split('T')[
 img:document.getElementById('img-url').value||''
 };
 const index=parseInt(document.getElementById('edit-index').value);
-const originalItems=[...items];
 if(index===-1) items.unshift(item); else items[index]=item;
-const isSuccess=await syncToCloud();
-if(isSuccess){
+if(await syncToCloud()){
 resetForm(); document.getElementById('registration-form').style.display="none";
 document.getElementById('result-message').style.display="none";
-document.getElementById('api-input').value="";
 render(true); await loadData();
-}else{ items=originalItems; alert("同期失敗。やり直してください"); }
-saveBtn.disabled=false; searchBtn.disabled=false;
-saveBtn.innerText="クラウドに保存して同期";
+}
+saveBtn.disabled=false;
 }
 
 async function syncToCloud(){
-document.getElementById('sync-status').innerText="⏳ サーバー通信中...";
+document.getElementById('sync-status').innerText="⏳ 同期中...";
 try{
 await fetch(GAS_URL,{method:'POST',body:JSON.stringify(items)});
-await new Promise(resolve=>setTimeout(resolve,1500));
-document.getElementById('sync-status').innerText="✅ 同期完了 ("+items.length+"件)";
 return true;
 }catch(e){ return false; }
 }
@@ -207,201 +182,75 @@ function render(resetLimit=false){
 if(resetLimit) displayLimit=30;
 const list=document.getElementById('list');
 const query=document.getElementById('search').value.toLowerCase();
-const queryAlpha=query.replace(/[^a-z0-9]/gi,'');
 list.innerHTML='';
-let filteredCount=0, displayedCount=0;
-const colors={book:'#3498db',cd:'#9b59b6',record:'#e67e22',other:'#95a5a6'};
-
-items.map((item, originalIndex)=>({...item, originalIndex}))
-.filter(item=>{
-const codeAlpha=(item.code||'').toLowerCase().replace(/[^a-z0-9]/gi,'');
-const targets=[item.title,item.creator,item.shop,item.location].join(' ').toLowerCase();
-return targets.includes(query)||(queryAlpha!=='' && codeAlpha.includes(queryAlpha));
-})
-.forEach(item=>{
-filteredCount++;
-if(displayedCount<displayLimit){
-displayedCount++;
+let filtered = items.filter(i => (i.title+i.creator+i.code).toLowerCase().includes(query));
+filtered.slice(0, displayLimit).forEach((item, idx) => {
 const card=document.createElement('div');
 card.className='item-card';
 card.innerHTML=`
 <img src="${item.img||'https://via.placeholder.com/100?text=No+Img'}" class="item-img">
 <div class="item-main">
-<span class="tag" style="background:${colors[item.type]}">${item.type}</span>
-<div style="font-weight:bold;">${item.title}</div>
-<div style="font-size:0.8em;color:#666;">👤 ${item.creator} | 📍 ${item.location}</div>
-<div style="font-size:0.7em;color:#999;">🆔 ${item.code||''}</div>
+<span class="tag" style="background:#3498db">${item.type}</span>
+<div style="font-weight:bold; font-size:0.9em;">${item.title}</div>
+<div style="font-size:0.75em;color:#666;">${item.creator}</div>
 </div>
-<div style="display:flex;gap:10px;">
-<button class="btn btn-ghost" onclick="editItem(${item.originalIndex})">📝</button>
-<button class="btn btn-ghost btn-delete" onclick="deleteItem(${item.originalIndex})">🗑</button>
-</div>`;
+<button class="btn btn-ghost" onclick="deleteItem(${items.indexOf(item)})">🗑</button>`;
 list.appendChild(card);
-}
 });
-document.getElementById('load-more-container').style.display=(filteredCount>displayedCount)?'block':'none';
-// 描画のガタつき防止のため、少しだけ時間を置いてグラフを更新
-setTimeout(updateCharts, 200);
+setTimeout(updateCharts, 300);
 }
 
-function editItem(index){
-const item=items[index];
-document.getElementById('registration-form').style.display="block";
-document.getElementById('result-message').style.display="none";
-document.getElementById('type').value=item.type;
-document.getElementById('title').value=item.title;
-document.getElementById('creator').value=item.creator;
-document.getElementById('code-display').value=item.code||'';
-document.getElementById('price').value=item.price;
-document.getElementById('shop').value=item.shop;
-document.getElementById('location').value=item.location;
-document.getElementById('condition').value=item.condition;
-document.getElementById('date').value=item.date;
-document.getElementById('img-url').value=item.img;
-document.getElementById('edit-index').value=index;
-window.scrollTo({top:0,behavior:'smooth'});
-}
-
-async function deleteItem(index){
-if(confirm(`「${items[index].title}」を削除してもよろしいですか？`)){
-items.splice(index,1);
-const isSuccess=await syncToCloud();
-if(isSuccess){ render(); alert("削除しました"); }else{ alert("同期エラーのため削除できませんでした"); loadData(); }
-}
+function deleteItem(index){
+if(confirm("削除しますか？")){ items.splice(index,1); syncToCloud().then(render); }
 }
 
 function sortData(key,order){
-items.sort((a,b)=>{
-let vA=a[key]||'', vB=b[key]||'';
-return order==='asc'?vA.toString().localeCompare(vB):vB.toString().localeCompare(vA);
-});
+items.sort((a,b)=>order==='asc'?(a[key]||'').localeCompare(b[key]||''):(b[key]||'').localeCompare(a[key]||''));
 render(true);
 }
 
-function resetForm(){
-document.getElementById('edit-index').value="-1";
-document.querySelectorAll('#registration-form input').forEach(i=>{ if(i.id!=='type') i.value=''; });
-}
+function resetForm(){ document.querySelectorAll('#registration-form input').forEach(i=>i.value=''); }
 
 function updateCharts() {
     let counts = {book: 0, cd: 0, record: 0, other: 0};
     let monthlySpend = {};
-    
     items.forEach(item => {
         counts[item.type]++;
-        const dateStr = item.date || "";
-        const month = dateStr.substring(0, 7); 
-        if (month && month.match(/^\d{4}-\d{2}$/)) {
-            monthlySpend[month] = (monthlySpend[month] || 0) + (parseInt(item.price) || 0);
-        }
+        const m = (item.date || "").substring(0, 7);
+        if (m) monthlySpend[m] = (monthlySpend[m] || 0) + (parseInt(item.price) || 0);
     });
 
-    const commonOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: { padding: { left: 10, right: 10, top: 0, bottom: 0 } },
-        animation: { duration: 600 }
+    const opt = { 
+        responsive: true, 
+        maintainAspectRatio: false, 
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
     };
 
-    // 1. 円グラフ
-    const pieCtx = document.getElementById('pieChart').getContext('2d');
     if (pieChart) pieChart.destroy();
-    pieChart = new Chart(pieCtx, {
+    pieChart = new Chart(document.getElementById('pieChart'), {
         type: 'doughnut',
-        data: {
-            labels: ['本', 'CD', 'レコード', '他'],
-            datasets: [{
-                data: [counts.book, counts.cd, counts.record, counts.other],
-                backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#95a5a6'],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            ...commonOptions,
-            plugins: { 
-                title: { display: true, text: 'カテゴリ内訳', padding: 10 },
-                legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
-            } 
-        }
+        data: { labels: ['本', 'CD', 'レコード', '他'], datasets: [{ data: Object.values(counts), backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#95a5a6'] }] },
+        options: opt
     });
 
-    // 2. 折れ線グラフ
-    const lineCtx = document.getElementById('lineChart').getContext('2d');
     if (lineChart) lineChart.destroy();
-    const sortedMonths = Object.keys(monthlySpend).sort().slice(-6);
-
-    lineChart = new Chart(lineCtx, {
+    const sorted = Object.keys(monthlySpend).sort().slice(-6);
+    lineChart = new Chart(document.getElementById('lineChart'), {
         type: 'line',
-        data: {
-            labels: sortedMonths,
-            datasets: [{
-                label: '支出 (円)',
-                data: sortedMonths.map(m => monthlySpend[m]),
-                borderColor: '#27ae60',
-                backgroundColor: 'rgba(39, 174, 96, 0.1)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 4
-            }]
-        },
-        options: { 
-            ...commonOptions,
-            plugins: { title: { display: true, text: '月別支出トレンド', padding: 10 }, legend: { display: false } },
-            scales: {
-                y: { 
-                    beginAtZero: true, 
-                    afterFit: (scale) => { scale.width = 50 }, // 目盛り幅を固定してズレ防止
-                    ticks: { font: { size: 9 }, callback: v => v.toLocaleString() } 
-                },
-                x: { ticks: { font: { size: 9 } } }
-            }
-        }
+        data: { labels: sorted, datasets: [{ label: '円', data: sorted.map(m => monthlySpend[m]), borderColor: '#27ae60', tension: 0.4 }] },
+        options: { ...opt, scales: { y: { ticks: { font: { size: 8 } } }, x: { ticks: { font: { size: 8 } } } } }
     });
 }
 
 function exportCSV() {
-    if (items.length === 0) return alert("データがありません。");
-    const headers = ["種別", "タイトル", "作者/アーティスト", "コード", "価格", "購入店", "場所", "状態", "日付"];
-    const keys = ["type", "title", "creator", "code", "price", "shop", "location", "condition", "date"];
-    const csvRows = items.map(item => keys.map(key => `"${(item[key] || "").toString().replace(/"/g, '""')}"`).join(","));
-    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-    const blob = new Blob([bom, headers.join(",") + "\n" + csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    let csv = "種別,タイトル,作者,価格,日付\n" + items.map(i => `"${i.type}","${i.title}","${i.creator}","${i.price}","${i.date}"`).join("\n");
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: "text/csv" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `collection_backup_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = "backup.csv";
     link.click();
 }
 
-async function importCSV(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        const text = e.target.result;
-        const rows = text.split(/\r?\n/).filter(r => r.trim() !== "");
-        if (rows.length < 2) return;
-        const mapping = {"種別":"type","タイトル":"title","作者/アーティスト":"creator","コード":"code","価格":"price","購入店":"shop","場所":"location","状態":"condition","日付":"date"};
-        const headers = rows[0].split(',').map(h => h.replace(/"/g, '').trim());
-        const newItems = rows.slice(1).map(row => {
-            const values = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
-            const item = {};
-            headers.forEach((h, i) => {
-                const key = mapping[h];
-                if (key) item[key] = (values[i] || "").replace(/^"|"$/g, '').replace(/""/g, '"').trim();
-            });
-            if (item.price) item.price = parseInt(item.price) || 0;
-            return item.title ? item : null;
-        }).filter(i => i !== null);
-
-        const mode = confirm(`読込：${newItems.length}件見つかりました。\n\n【OK】＝ 追加\n【キャンセル】＝ 入れ替え`);
-        items = mode ? [...items, ...newItems] : newItems;
-        if (await syncToCloud()) { render(true); await loadData(); }
-        input.value = "";
-    };
-    reader.readAsText(file);
-}
-
-document.getElementById('date').value=new Date().toISOString().split('T')[0];
 loadData();
 </script>
 </body>
