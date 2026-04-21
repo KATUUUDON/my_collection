@@ -35,6 +35,7 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 .btn-success { background: var(--success); color: white; width: 100%; margin-top: 15px; font-size: 1.1em; }
 .btn-ghost { background: #e2e8f0; color: #4a5568; font-size: 0.85em; }
 .btn-delete { color: var(--error); padding: 5px 10px; font-size: 1.2em; background: none; }
+.btn-edit { color: var(--accent); padding: 5px 10px; font-size: 1.2em; background: none; }
 .sync-status { text-align: right; font-size: 0.75em; color: #666; margin-bottom: 5px; }
 
 .load-more-area { text-align: center; padding: 20px 0; background: #fff; border-top: 1px solid #eee; }
@@ -75,6 +76,7 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 <input type="hidden" id="edit-index" value="-1"><input type="hidden" id="img-url">
 </div>
 <button id="main-save-btn" class="btn btn-success" onclick="saveItem()">クラウドに保存して同期</button>
+<button class="btn btn-ghost" onclick="resetForm(); document.getElementById('registration-form').style.display='none';" style="width:100%; margin-top:10px;">キャンセル</button>
 </div>
 </div>
 
@@ -123,6 +125,7 @@ msgArea.innerHTML=`⚠️ 登録済み：「${duplicate.title}」<br>追加で�
 await autoFetch(input);
 msgArea.style.display="block"; formArea.style.display="block";
 document.getElementById('edit-index').value="-1";
+document.getElementById('main-save-btn').innerText="クラウドに保存して同期";
 formArea.scrollIntoView({behavior:'smooth'});
 }
 
@@ -204,6 +207,7 @@ list.innerHTML='';
 let filtered = items.filter(i => (i.title+(i.creator||"")+(i.code||"")).toLowerCase().includes(query));
 
 filtered.slice(0, displayLimit).forEach((item) => {
+const originalIndex = items.indexOf(item);
 const card=document.createElement('div');
 card.className='item-card';
 card.innerHTML=`
@@ -212,9 +216,11 @@ card.innerHTML=`
 <span class="tag" style="background:${colors[item.type]}">${item.type}</span>
 <div class="item-title">${item.title}</div>
 <div class="item-info">👤 ${item.creator || '不明'} | 📍 ${item.location || '-'}</div>
-<div class="item-info" style="font-size:0.7em; color:#999;">🆔 ${item.code || ''}</div>
 </div>
-<button class="btn-delete" onclick="deleteItem(${items.indexOf(item)})">🗑</button>`;
+<div style="display:flex; flex-direction:column; gap:5px;">
+    <button class="btn-edit" onclick="editItem(${originalIndex})">📝</button>
+    <button class="btn-delete" onclick="deleteItem(${originalIndex})">🗑</button>
+</div>`;
 list.appendChild(card);
 });
 
@@ -226,6 +232,25 @@ if (filtered.length > displayLimit) {
 }
 
 setTimeout(updateCharts, 300);
+}
+
+function editItem(index){
+const item=items[index];
+document.getElementById('registration-form').style.display="block";
+document.getElementById('result-message').style.display="none";
+document.getElementById('type').value=item.type;
+document.getElementById('title').value=item.title;
+document.getElementById('creator').value=item.creator;
+document.getElementById('code-display').value=item.code||'';
+document.getElementById('price').value=item.price;
+document.getElementById('shop').value=item.shop;
+document.getElementById('location').value=item.location;
+document.getElementById('condition').value=item.condition;
+document.getElementById('date').value=item.date;
+document.getElementById('img-url').value=item.img;
+document.getElementById('edit-index').value=index;
+document.getElementById('main-save-btn').innerText="修正を保存する";
+window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function deleteItem(index){
@@ -242,6 +267,7 @@ render(true);
 function resetForm(){ 
 document.querySelectorAll('#registration-form input').forEach(i=>i.value=''); 
 document.getElementById('edit-index').value="-1";
+document.getElementById('main-save-btn').innerText="クラウドに保存して同期";
 }
 
 function updateCharts() {
