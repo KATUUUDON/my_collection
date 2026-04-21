@@ -27,12 +27,13 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 .btn { padding: 12px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
 .btn-primary { background: var(--accent); color: white; }
 .btn-success { background: var(--success); color: white; width: 100%; margin-top: 15px; font-size: 1.1em; }
+.btn-success:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-ghost { background: #e2e8f0; color: #4a5568; font-size: 0.85em; }
-.btn-delete { color: var(--error); padding: 5px 10px; font-size: 1.2em; background: none; }
-.btn-edit { color: var(--accent); padding: 5px 10px; font-size: 1.2em; background: none; }
+.btn-delete { color: var(--error); padding: 5px 10px; font-size: 1.2em; background: none; border:none; }
+.btn-edit { color: var(--accent); padding: 5px 10px; font-size: 1.2em; background: none; border:none; }
 .sync-status { text-align: right; font-size: 0.75em; color: #666; margin-bottom: 5px; }
 .load-more-area { text-align: center; padding: 20px 0; background: #fff; border-top: 1px solid #eee; }
-.btn-load-more { background: #f8fafc; color: var(--accent); border: 2px solid var(--accent); width: 80%; max-width: 300px; }
+.btn-load-more { background: #f8fafc; color: var(--accent); border: 2px solid var(--accent); width: 80%; max-width: 300px; border-radius: 8px; padding: 10px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -84,32 +85,38 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 </div>
 </div>
 <script>
+// ★ここを自分のGASのURLに差し替える★
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz9Io-YZwOWxwzotMvkHYYTPHUosJ_ZQIEP8Nqze1taq2XwxZY5tPaGZ-iL_z92hGhTeA/exec";
 let items = [], displayLimit = 30, pieChart = null, lineChart = null;
 
 async function loadData() {
     try {
-        const res = await fetch(GAS_URL);
+        // キャッシュ回避のためタイムスタンプを付与
+        const res = await fetch(`${GAS_URL}?t=${Date.now()}`);
         const data = await res.json();
         items = Array.isArray(data) ? data : [];
-        document.getElementById('sync-status').innerText = "✅ 同期済み (" + items.length + "件)";
-        render(true);
+        updateUI();
     } catch(e){ 
         document.getElementById('sync-status').innerText = "❌ 同期エラー"; 
-        console.error(e);
     }
+}
+
+function updateUI() {
+    document.getElementById('sync-status').innerText = "✅ 同期済み (" + items.length + "件)";
+    render(false); // 表示制限はリセットせず更新
 }
 
 async function searchWorkflow() {
     const input = document.getElementById('api-input').value.trim();
     if(!input) return;
-    resetForm(); // まずフォームをまっさらに
     const msgArea = document.getElementById('result-message');
     const formArea = document.getElementById('registration-form');
     const duplicate = items.find(i => (i.code||'').toString() === input);
     if(duplicate){
         msgArea.className="status-msg msg-found";
         msgArea.innerHTML=`⚠️ 登録済み：「${duplicate.title}」<br>追加で登録しますか？`;
+    } else {
+        msgArea.style.display="none";
     }
     await autoFetch(input);
     msgArea.style.display="block"; 
@@ -119,11 +126,10 @@ async function searchWorkflow() {
 
 async function autoFetch(input){
     document.getElementById('code-display').value=input;
-    const cleanInput=input.replace(/-/g,'');
     const type=document.getElementById('type').value;
     try {
         if(type==='book'){
-            const res=await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanInput}`);
+            const res=await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${input.replace(/-/g,'')}`);
             const data=await res.json();
             if(data.totalItems>0){
                 const info=data.items[0].volumeInfo;
@@ -132,7 +138,7 @@ async function autoFetch(input){
                 document.getElementById('img-url').value=info.imageLinks?info.imageLinks.thumbnail:'';
             }
         } else {
-            const res=await fetch(`https://musicbrainz.org/ws/2/release/?query=barcode:${cleanInput}%20OR%20catno:${input}&fmt=json`);
+            const res=await fetch(`https://musicbrainz.org/ws/2/release/?query=barcode:${input.replace(/-/g,'')}%20OR%20catno:${input}&fmt=json`);
             const data=await res.json();
             if(data.releases && data.releases.length>0){
                 const info=data.releases[0];
@@ -146,9 +152,10 @@ async function autoFetch(input){
 async function saveItem(){
     const title=document.getElementById('title').value.trim();
     if(!title) return alert("タイトルを入力してください");
+    
     const saveBtn=document.getElementById('main-save-btn');
     saveBtn.disabled=true;
-    saveBtn.innerText="⏳ 保存中...";
+    saveBtn.innerText="⏳ クラウド同期中...";
 
     const item={
         type:document.getElementById('type').value, 
@@ -164,21 +171,24 @@ async function saveItem(){
     };
 
     const editIdx = parseInt(document.getElementById('edit-index').value);
+    
+    // --- 【重要】保存前に手元のデータを更新して即時反映 ---
     if(editIdx === -1) {
-        items.unshift(item); // 新規は先頭へ
+        items.unshift(item);
     } else {
-        items[editIdx] = item; // 編集は上書き
+        items[editIdx] = item;
     }
+    updateUI(); // サーバーの返信を待たずに画面を更新！
 
-    if(await syncToCloud()){
+    const success = await syncToCloud();
+    if(success){
         document.getElementById('registration-form').style.display="none";
         document.getElementById('result-message').style.display="none";
         resetForm();
-        render(true);
-        alert("保存が完了しました！");
     } else {
-        alert("クラウドへの保存に失敗しました。ネット接続を確認してください。");
+        alert("クラウド同期に失敗しました。再読み込みして確認してください。");
     }
+    
     saveBtn.disabled=false;
     saveBtn.innerText="クラウドに保存して同期";
 }
@@ -186,22 +196,19 @@ async function saveItem(){
 async function syncToCloud(){
     document.getElementById('sync-status').innerText="⏳ 同期中...";
     try{
-        const response = await fetch(GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify(items)
-        });
-        if(response.ok) {
-            document.getElementById('sync-status').innerText = "✅ 同期済み (" + items.length + "件)";
-            return true;
-        }
-    } catch(e){ console.error(e); }
-    document.getElementById('sync-status').innerText = "❌ 同期エラー";
-    return false;
+        await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(items) });
+        document.getElementById('sync-status').innerText = "✅ 同期済み (" + items.length + "件)";
+        return true;
+    } catch(e){ 
+        console.error(e);
+        document.getElementById('sync-status').innerText = "❌ 同期エラー";
+        return false;
+    }
 }
 
 function loadMore() {
     displayLimit += 30;
-    render();
+    render(false);
 }
 
 function render(resetLimit=false){
@@ -210,7 +217,9 @@ function render(resetLimit=false){
     const query=document.getElementById('search').value.toLowerCase();
     const colors={book:'#3498db',cd:'#9b59b6',record:'#e67e22',other:'#95a5a6'};
     list.innerHTML='';
+    
     let filtered = items.filter(i => (i.title+(i.creator||"")+(i.code||"")).toLowerCase().includes(query));
+    
     filtered.slice(0, displayLimit).forEach((item) => {
         const originalIndex = items.indexOf(item);
         const card=document.createElement('div');
@@ -218,9 +227,9 @@ function render(resetLimit=false){
         card.innerHTML=`
         <img src="${item.img||'https://via.placeholder.com/100?text=No+Img'}" class="item-img">
         <div class="item-main">
-        <span class="tag" style="background:${colors[item.type]}">${item.type}</span>
-        <div class="item-title">${item.title}</div>
-        <div class="item-info">👤 ${item.creator || '不明'} | 📍 ${item.location || '-'}</div>
+            <span class="tag" style="background:${colors[item.type]}">${item.type}</span>
+            <div class="item-title">${item.title}</div>
+            <div class="item-info">👤 ${item.creator || '不明'} | 📍 ${item.location || '-'}</div>
         </div>
         <div style="display:flex; flex-direction:column; gap:5px;">
             <button class="btn-edit" onclick="editItem(${originalIndex})">📝</button>
@@ -228,9 +237,9 @@ function render(resetLimit=false){
         </div>`;
         list.appendChild(card);
     });
-    const loadMoreBtn = document.getElementById('load-more-container');
-    loadMoreBtn.style.display = filtered.length > displayLimit ? 'block' : 'none';
-    setTimeout(updateCharts, 300);
+
+    document.getElementById('load-more-container').style.display = filtered.length > displayLimit ? 'block' : 'none';
+    updateCharts();
 }
 
 function editItem(index){
@@ -261,7 +270,8 @@ function cancelEdit() {
 function deleteItem(index){
     if(confirm(`「${items[index].title}」を削除しますか？`)){ 
         items.splice(index,1); 
-        syncToCloud().then(() => render(true)); 
+        updateUI();
+        syncToCloud();
     }
 }
 
@@ -299,20 +309,14 @@ function updateCharts() {
     if (pieChart) pieChart.destroy();
     pieChart = new Chart(document.getElementById('pieChart'), {
         type: 'doughnut',
-        data: { 
-            labels: ['本', 'CD', 'レコード', '他'], 
-            datasets: [{ data: [counts.book, counts.cd, counts.record, counts.other], backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#95a5a6'], borderWidth: 1 }] 
-        },
+        data: { labels: ['本', 'CD', 'レコード', '他'], datasets: [{ data: [counts.book, counts.cd, counts.record, counts.other], backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#95a5a6'], borderWidth: 1 }] },
         options: { ...opt, plugins: { ...opt.plugins, title: { display: true, text: 'カテゴリ内訳' } } }
     });
     if (lineChart) lineChart.destroy();
     const sortedMonths = Object.keys(monthlySpend).sort().slice(-6);
     lineChart = new Chart(document.getElementById('lineChart'), {
         type: 'line',
-        data: { 
-            labels: sortedMonths, 
-            datasets: [{ label: '支出 (円)', data: sortedMonths.map(m => monthlySpend[m]), borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.1)', fill: true, tension: 0.4, pointRadius: 4 }] 
-        },
+        data: { labels: sortedMonths, datasets: [{ label: '支出 (円)', data: sortedMonths.map(m => monthlySpend[m]), borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.1)', fill: true, tension: 0.4, pointRadius: 4 }] },
         options: { ...opt, plugins: { ...opt.plugins, title: { display: true, text: '月別支出トレンド' }, legend: { display: false } }, scales: { y: { ticks: { font: { size: 9 }, callback: v => v.toLocaleString() } }, x: { ticks: { font: { size: 9 } } } } }
     });
 }
