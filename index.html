@@ -37,7 +37,6 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 .btn-delete { color: var(--error); padding: 5px 10px; font-size: 1.2em; background: none; }
 .sync-status { text-align: right; font-size: 0.75em; color: #666; margin-bottom: 5px; }
 
-/* さらに表示するボタンのスタイル */
 .load-more-area { text-align: center; padding: 20px 0; background: #fff; border-top: 1px solid #eee; }
 .btn-load-more { background: #f8fafc; color: var(--accent); border: 2px solid var(--accent); width: 80%; max-width: 300px; }
 </style>
@@ -90,11 +89,12 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 
 <div id="list" style="border-radius:15px; overflow: hidden; border: 1px solid #eee;"></div>
 <div id="load-more-container" class="load-more-area" style="display:none;">
-    <button class="btn btn-load-more" onclick="loadMore()">▼ さらに表示する (31枚目〜)</button>
+    <button class="btn btn-load-more" onclick="loadMore()">さらに表示する</button>
 </div>
 </div>
 
 <script>
+// ★ここを自分のGASのURLに差し替える★
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz9Io-YZwOWxwzotMvkHYYTPHUosJ_ZQIEP8Nqze1taq2XwxZY5tPaGZ-iL_z92hGhTeA/exec";
 
 let items = [], displayLimit = 30, pieChart = null, lineChart = null;
@@ -120,7 +120,7 @@ msgArea.className="status-msg msg-found";
 msgArea.innerHTML=`⚠️ 登録済み：「${duplicate.title}」<br>追加で登録しますか？`;
 }
 
-const foundOnline = await autoFetch(input);
+await autoFetch(input);
 msgArea.style.display="block"; formArea.style.display="block";
 document.getElementById('edit-index').value="-1";
 formArea.scrollIntoView({behavior:'smooth'});
@@ -130,7 +130,6 @@ async function autoFetch(input){
 document.getElementById('code-display').value=input;
 const cleanInput=input.replace(/-/g,'');
 const type=document.getElementById('type').value;
-let success=false;
 try {
 if(type==='book'){
 const res=await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanInput}`);
@@ -140,7 +139,7 @@ const info=data.items[0].volumeInfo;
 document.getElementById('title').value=info.title||'';
 document.getElementById('creator').value=info.authors?info.authors.join(', '):'';
 document.getElementById('img-url').value=info.imageLinks?info.imageLinks.thumbnail:'';
-success=true;
+return true;
 }
 } else {
 const res=await fetch(`https://musicbrainz.org/ws/2/release/?query=barcode:${cleanInput}%20OR%20catno:${input}&fmt=json`);
@@ -149,11 +148,11 @@ if(data.releases && data.releases.length>0){
 const info=data.releases[0];
 document.getElementById('title').value=info.title||'';
 document.getElementById('creator').value=info['artist-credit']?info['artist-credit'][0].name:'';
-success=true;
+return true;
 }
 }
 } catch(e){}
-return success;
+return false;
 }
 
 async function saveItem(){
@@ -190,7 +189,6 @@ return true;
 }catch(e){ return false; }
 }
 
-// 読み込み件数を増やす関数
 function loadMore() {
     displayLimit += 30;
     render();
@@ -205,7 +203,6 @@ list.innerHTML='';
 
 let filtered = items.filter(i => (i.title+(i.creator||"")+(i.code||"")).toLowerCase().includes(query));
 
-// 実際に表示する分だけループ
 filtered.slice(0, displayLimit).forEach((item) => {
 const card=document.createElement('div');
 card.className='item-card';
@@ -221,7 +218,6 @@ card.innerHTML=`
 list.appendChild(card);
 });
 
-// 31枚目以降がある場合だけボタンを表示
 const loadMoreBtn = document.getElementById('load-more-container');
 if (filtered.length > displayLimit) {
     loadMoreBtn.style.display = 'block';
@@ -258,8 +254,7 @@ function updateCharts() {
     });
 
     const opt = { 
-        responsive: true, 
-        maintainAspectRatio: false,
+        responsive: true, maintainAspectRatio: false,
         layout: { padding: { bottom: 10 } },
         plugins: { 
             legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, font: { size: 10 } } } 
