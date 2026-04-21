@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Collection Master PRO (Hybrid Edition)</title>
+<title>Collection Master PRO (Stable Edition)</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e74c3c; --bg: #f4f7f6; }
@@ -40,7 +40,7 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 <div class="container">
 <header style="text-align:center; margin-bottom:15px;">
 <h1 style="color:var(--primary); margin:0; font-size: 1.8em;">Collection Master PRO</h1>
-<p style="color:#666; font-size: 0.85em;">Ultimate Mobile Dashboard 2026</p>
+<p style="color:#666; font-size: 0.85em;">Stable Edition 2026</p>
 </header>
 <div id="sync-status" class="sync-status">読み込み中...</div>
 <div class="dashboard">
@@ -90,20 +90,20 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbz9Io-YZwOWxwzotMvkHYYT
 let items = [], displayLimit = 30, pieChart = null, lineChart = null;
 
 async function loadData() {
+    document.getElementById('sync-status').innerText = "⏳ 読み込み中...";
     try {
-        // キャッシュ回避のためタイムスタンプを付与
         const res = await fetch(`${GAS_URL}?t=${Date.now()}`);
         const data = await res.json();
         items = Array.isArray(data) ? data : [];
         updateUI();
     } catch(e){ 
-        document.getElementById('sync-status').innerText = "❌ 同期エラー"; 
+        document.getElementById('sync-status').innerText = "❌ 読み込みエラー"; 
     }
 }
 
 function updateUI() {
     document.getElementById('sync-status').innerText = "✅ 同期済み (" + items.length + "件)";
-    render(false); // 表示制限はリセットせず更新
+    render(false);
 }
 
 async function searchWorkflow() {
@@ -112,12 +112,19 @@ async function searchWorkflow() {
     const msgArea = document.getElementById('result-message');
     const formArea = document.getElementById('registration-form');
     const duplicate = items.find(i => (i.code||'').toString() === input);
+    
+    // 既存のフォーム内容をクリア（識別コード以外）
+    const typeVal = document.getElementById('type').value;
+    resetForm();
+    document.getElementById('type').value = typeVal;
+
     if(duplicate){
         msgArea.className="status-msg msg-found";
-        msgArea.innerHTML=`⚠️ 登録済み：「${duplicate.title}」<br>追加で登録しますか？`;
+        msgArea.innerHTML=`⚠️ 登録済み：「${duplicate.title}」<br>重複して登録しますか？`;
     } else {
         msgArea.style.display="none";
     }
+    
     await autoFetch(input);
     msgArea.style.display="block"; 
     formArea.style.display="block";
@@ -155,8 +162,10 @@ async function saveItem(){
     
     const saveBtn=document.getElementById('main-save-btn');
     saveBtn.disabled=true;
-    saveBtn.innerText="⏳ クラウド同期中...";
+    saveBtn.innerText="⏳ クラウド保存中...";
 
+    // 1. 保存用のクローン作成
+    const tempItems = JSON.parse(JSON.stringify(items));
     const item={
         type:document.getElementById('type').value, 
         title:title,
@@ -171,39 +180,40 @@ async function saveItem(){
     };
 
     const editIdx = parseInt(document.getElementById('edit-index').value);
-    
-    // --- 【重要】保存前に手元のデータを更新して即時反映 ---
     if(editIdx === -1) {
-        items.unshift(item);
+        tempItems.unshift(item);
     } else {
-        items[editIdx] = item;
+        tempItems[editIdx] = item;
     }
-    updateUI(); // サーバーの返信を待たずに画面を更新！
 
-    const success = await syncToCloud();
+    // 2. サーバーに送信
+    const success = await syncToCloud(tempItems);
+    
     if(success){
+        items = tempItems; // 送信成功時のみ手元のデータを更新
+        updateUI();
         document.getElementById('registration-form').style.display="none";
         document.getElementById('result-message').style.display="none";
         resetForm();
+        alert("保存完了！");
     } else {
-        alert("クラウド同期に失敗しました。再読み込みして確認してください。");
+        alert("保存に失敗しました。ネット環境を確認し、もう一度保存ボタンを押してください。");
     }
     
     saveBtn.disabled=false;
     saveBtn.innerText="クラウドに保存して同期";
 }
 
-async function syncToCloud(){
+async function syncToCloud(dataToSend){
     document.getElementById('sync-status').innerText="⏳ 同期中...";
     try{
-        await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(items) });
-        document.getElementById('sync-status').innerText = "✅ 同期済み (" + items.length + "件)";
-        return true;
-    } catch(e){ 
-        console.error(e);
-        document.getElementById('sync-status').innerText = "❌ 同期エラー";
-        return false;
-    }
+        const response = await fetch(GAS_URL, { 
+            method: 'POST', 
+            body: JSON.stringify(dataToSend) 
+        });
+        if(response.ok) return true;
+    } catch(e){ console.error(e); }
+    return false;
 }
 
 function loadMore() {
@@ -267,11 +277,16 @@ function cancelEdit() {
     document.getElementById('result-message').style.display='none';
 }
 
-function deleteItem(index){
+async function deleteItem(index){
     if(confirm(`「${items[index].title}」を削除しますか？`)){ 
-        items.splice(index,1); 
-        updateUI();
-        syncToCloud();
+        const tempItems = [...items];
+        tempItems.splice(index,1);
+        if(await syncToCloud(tempItems)){
+            items = tempItems;
+            updateUI();
+        } else {
+            alert("削除に失敗しました。");
+        }
     }
 }
 
