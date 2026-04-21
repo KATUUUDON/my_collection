@@ -1,3 +1,24 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -10,8 +31,8 @@
 body { font-family: sans-serif; background: var(--bg); padding: 20px; color: #333; margin: 0; }
 .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
 .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
-.card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 15px; }
-.chart-container { height: 220px; position: relative; }
+.card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 15px; min-height: 250px; }
+.chart-container { height: 220px; position: relative; width: 100%; }
 .form-section { background: #edf2f7; padding: 20px; border-radius: 15px; margin-bottom: 30px; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
 input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 16px; }
@@ -280,13 +301,17 @@ document.querySelectorAll('#registration-form input').forEach(i=>{ if(i.id!=='ty
 function updateCharts() {
     let counts = {book: 0, cd: 0, record: 0, other: 0};
     let monthlySpend = {};
+    
     items.forEach(item => {
         counts[item.type]++;
-        const month = (item.date || "").substring(0, 7);
-        if (month) monthlySpend[month] = (monthlySpend[month] || 0) + (parseInt(item.price) || 0);
+        const dateStr = item.date || "";
+        const month = dateStr.substring(0, 7); 
+        if (month && month.match(/^\d{4}-\d{2}$/)) {
+            monthlySpend[month] = (monthlySpend[month] || 0) + (parseInt(item.price) || 0);
+        }
     });
 
-    // 1. 円グラフ
+    // 1. 円グラフ（ドーナツ型）
     const pieCtx = document.getElementById('pieChart').getContext('2d');
     if (pieChart) pieChart.destroy();
     pieChart = new Chart(pieCtx, {
@@ -295,16 +320,24 @@ function updateCharts() {
             labels: ['本', 'CD', 'レコード', '他'],
             datasets: [{
                 data: [counts.book, counts.cd, counts.record, counts.other],
-                backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#95a5a6']
+                backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#95a5a6'],
+                borderWidth: 2
             }]
         },
-        options: { maintainAspectRatio: false, plugins: { title: { display: true, text: 'カテゴリ内訳' } } }
+        options: { 
+            maintainAspectRatio: false, 
+            animation: { duration: 800 },
+            plugins: { title: { display: true, text: 'カテゴリ内訳' } } 
+        }
     });
 
-    // 2. 折れ線グラフ
+    // 2. 折れ線グラフ（支出推移）
     const lineCtx = document.getElementById('lineChart').getContext('2d');
     if (lineChart) lineChart.destroy();
+
+    // 月を時系列でソートして直近6ヶ月分を表示
     const sortedMonths = Object.keys(monthlySpend).sort().slice(-6);
+
     lineChart = new Chart(lineCtx, {
         type: 'line',
         data: {
@@ -315,10 +348,19 @@ function updateCharts() {
                 borderColor: '#27ae60',
                 backgroundColor: 'rgba(39, 174, 96, 0.1)',
                 fill: true,
-                tension: 0.3
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#27ae60'
             }]
         },
-        options: { maintainAspectRatio: false, plugins: { title: { display: true, text: '月別支出トレンド' } } }
+        options: { 
+            maintainAspectRatio: false, 
+            animation: { duration: 800 },
+            plugins: { title: { display: true, text: '月別支出トレンド' } },
+            scales: {
+                y: { beginAtZero: true, ticks: { callback: value => value.toLocaleString() + '円' } }
+            }
+        }
     });
 }
 
@@ -384,6 +426,34 @@ loadData();
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
