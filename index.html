@@ -3,52 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Collection Master PRO (Ultimate Edition)</title>
+<title>Collection Master PRO (Hybrid Edition)</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e74c3c; --bg: #f4f7f6; }
 body { font-family: sans-serif; background: var(--bg); padding: 10px; color: #333; margin: 0; }
 .container { max-width: 1100px; margin: auto; background: white; padding: 15px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
 
-/* ダッシュボードのレイアウト調整（スマホ優先） */
 .dashboard { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
 @media (min-width: 768px) { .dashboard { display: grid; grid-template-columns: 1fr 1fr; } }
 
-.card { background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 15px; height: 260px; box-sizing: border-box; position: relative; overflow: hidden; }
-.chart-container { height: 230px; width: 100%; position: relative; }
+.card { background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 15px; height: 260px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+.chart-container { flex-grow: 1; width: 100%; position: relative; }
 
 .form-section { background: #edf2f7; padding: 15px; border-radius: 15px; margin-bottom: 20px; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-input, select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; }
+input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 16px; }
 
-.status-msg { margin: 10px 0; padding: 12px; border-radius: 10px; font-weight: bold; text-align: center; display: none; font-size: 0.9em; }
+.status-msg { margin: 10px 0; padding: 12px; border-radius: 10px; font-weight: bold; text-align: center; display: none; line-height: 1.4; font-size: 0.9em; }
 .msg-found { background: #e8f4fd; color: #2980b9; border: 1px solid #3498db; }
 .msg-notfound { background: #e9f7ef; color: #27ae60; border: 1px solid #2ecc71; }
 .msg-manual { background: #fff3e0; color: #e67e22; border: 1px solid #f39c12; }
 
 .item-card { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; background: #fff; }
-.item-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; margin-right: 12px; background: #eee; }
+.item-img { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; margin-right: 12px; background: #eee; border: 1px solid #ddd; flex-shrink: 0; }
 .item-main { flex-grow: 1; min-width: 0; }
-.item-main div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tag { font-size: 0.65em; padding: 2px 6px; border-radius: 4px; color: white; margin-right: 4px; font-weight: bold; }
+.item-title { font-weight: bold; font-size: 1rem; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-info { font-size: 0.8em; color: #666; }
+.tag { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; color: white; margin-right: 5px; font-weight: bold; vertical-align: middle; }
 
-.btn { padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
+.btn { padding: 12px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
 .btn-primary { background: var(--accent); color: white; }
-.btn-success { background: var(--success); color: white; width: 100%; margin-top: 10px; font-size: 1em; }
-.btn-ghost { background: #e2e8f0; color: #4a5568; font-size: 0.8em; }
+.btn-success { background: var(--success); color: white; width: 100%; margin-top: 15px; font-size: 1.1em; }
+.btn-ghost { background: #e2e8f0; color: #4a5568; font-size: 0.85em; }
+.btn-delete { color: var(--error); padding: 5px 10px; font-size: 1.2em; background: none; }
 .sync-status { text-align: right; font-size: 0.75em; color: #666; margin-bottom: 5px; }
-
-@media (max-width: 600px) { 
-  .item-card { flex-direction: row; text-align: left; }
-  header h1 { font-size: 1.5em; }
-}
 </style>
 </head>
 <body>
 <div class="container">
 <header style="text-align:center; margin-bottom:15px;">
-<h1 style="color:var(--primary); margin:0;">Collection Master PRO</h1>
-<p style="color:#666; font-size: 0.8em;">2026年・Mobile Optimized</p>
+<h1 style="color:var(--primary); margin:0; font-size: 1.8em;">Collection Master PRO</h1>
+<p style="color:#666; font-size: 0.85em;">Ultimate Mobile Dashboard 2026</p>
 </header>
 
 <div id="sync-status" class="sync-status">同期中...</div>
@@ -59,8 +55,8 @@ input, select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 </div>
 
 <div class="form-section">
-<div style="display: flex; gap: 8px; margin-bottom: 12px;">
-<input type="text" id="api-input" placeholder="ISBN/品番を入力...">
+<div style="display: flex; gap: 8px; margin-bottom: 15px;">
+<input type="text" id="api-input" placeholder="ISBN または 品番を入力...">
 <button class="btn btn-primary" id="search-btn" onclick="searchWorkflow()" style="white-space: nowrap;">判定</button>
 </div>
 <div id="result-message" class="status-msg"></div>
@@ -68,36 +64,35 @@ input, select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 <div class="form-grid">
 <select id="type"><option value="book">📚 本</option><option value="cd">💿 CD</option><option value="record" selected>🎸 レコード</option><option value="other">📦 その他</option></select>
 <input type="text" id="title" placeholder="タイトル（必須）">
-<input type="text" id="creator" placeholder="アーティスト">
+<input type="text" id="creator" placeholder="作者 / アーティスト">
 <input type="text" id="code-display" placeholder="識別コード">
-<input type="number" id="price" placeholder="価格">
-<input type="text" id="shop" placeholder="購入店">
-<input type="text" id="location" placeholder="場所">
+<input type="number" id="price" placeholder="価格（円）">
+<input type="text" id="shop" placeholder="購入店舗">
+<input type="text" id="location" placeholder="保管場所">
 <select id="condition"><option value="新品">新品</option><option value="中古">中古</option><option value="未開封">未開封</option></select>
 <input type="date" id="date">
 <input type="hidden" id="edit-index" value="-1"><input type="hidden" id="img-url">
 </div>
-<button id="main-save-btn" class="btn btn-success" onclick="saveItem()">保存して同期</button>
+<button id="main-save-btn" class="btn btn-success" onclick="saveItem()">クラウドに保存して同期</button>
 </div>
 </div>
 
-<div style="background:#fff; padding:10px; border-radius:12px; margin-bottom:15px; border:1px solid #eee;">
-<input type="text" id="search" placeholder="検索..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
-<div style="display:flex; flex-wrap:wrap; gap:5px;">
-<button class="btn btn-ghost" onclick="sortData('date', 'desc')">📅新着</button>
-<button class="btn btn-ghost" onclick="sortData('title', 'asc')">🔤名前</button>
-<button class="btn btn-primary" onclick="exportCSV()" style="margin-left:auto; font-size: 0.8em;">📥CSV</button>
+<div style="background:#fff; padding:12px; border-radius:12px; margin-bottom:20px; border:1px solid #eee;">
+<input type="text" id="search" placeholder="タイトル・品番・作者で検索..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
+<div style="display:flex; flex-wrap:wrap; gap:8px;">
+<button class="btn btn-ghost" onclick="sortData('date', 'desc')">📅 新着順</button>
+<button class="btn btn-ghost" onclick="sortData('title', 'asc')">🔤 名前順</button>
+<button class="btn btn-primary" onclick="exportCSV()" style="margin-left:auto; font-size: 0.8em;">📥CSV保存</button>
 </div>
 </div>
 
 <div id="list" style="border-radius:15px; overflow: hidden; border: 1px solid #eee;"></div>
-<div id="load-more-container" style="display:none; text-align:center; padding:15px;">
-<button class="btn btn-ghost" onclick="displayLimit += 50; render();">さらに表示</button>
+<div id="load-more-container" style="display:none; text-align:center; padding:20px;">
+<button class="btn btn-ghost" onclick="displayLimit += 50; render();">さらに表示する</button>
 </div>
 </div>
 
 <script>
-// ★ここを自分のGASのURLに差し替える★
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz9Io-YZwOWxwzotMvkHYYTPHUosJ_ZQIEP8Nqze1taq2XwxZY5tPaGZ-iL_z92hGhTeA/exec";
 
 let items = [], displayLimit = 30, pieChart = null, lineChart = null;
@@ -117,11 +112,17 @@ if(!input) return;
 const msgArea = document.getElementById('result-message');
 const formArea = document.getElementById('registration-form');
 const duplicate = items.find(i => (i.code||'').toString() === input);
+
 if(duplicate){
 msgArea.className="status-msg msg-found";
-msgArea.innerHTML=`⚠️ 登録済：「${duplicate.title}」`;
+msgArea.innerHTML=`⚠️ 登録済み：「${duplicate.title}」<br>追加で登録しますか？`;
 }
-await autoFetch(input);
+
+const foundOnline = await autoFetch(input);
+if(!duplicate){
+msgArea.className = foundOnline ? "status-msg msg-notfound" : "status-msg msg-manual";
+msgArea.innerText = foundOnline ? "🔍 ネット情報を取得しました。" : "❓ 情報が見つかりません。手動入力してください。";
+}
 msgArea.style.display="block"; formArea.style.display="block";
 document.getElementById('edit-index').value="-1";
 formArea.scrollIntoView({behavior:'smooth'});
@@ -129,19 +130,32 @@ formArea.scrollIntoView({behavior:'smooth'});
 
 async function autoFetch(input){
 document.getElementById('code-display').value=input;
+const cleanInput=input.replace(/-/g,'');
 const type=document.getElementById('type').value;
+let success=false;
 try{
 if(type==='book'){
-const res=await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${input.replace(/-/g,'')}`);
+const res=await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanInput}`);
 const data=await res.json();
 if(data.totalItems>0){
 const info=data.items[0].volumeInfo;
 document.getElementById('title').value=info.title||'';
 document.getElementById('creator').value=info.authors?info.authors.join(', '):'';
 document.getElementById('img-url').value=info.imageLinks?info.imageLinks.thumbnail:'';
+success=true;
+}
+}else{
+const res=await fetch(`https://musicbrainz.org/ws/2/release/?query=barcode:${cleanInput}%20OR%20catno:${input}&fmt=json`);
+const data=await res.json();
+if(data.releases && data.releases.length>0){
+const info=data.releases[0];
+document.getElementById('title').value=info.title||'';
+document.getElementById('creator').value=info['artist-credit']?info['artist-credit'][0].name:'';
+success=true;
 }
 }
 }catch(e){}
+return success;
 }
 
 async function saveItem(){
@@ -182,34 +196,42 @@ function render(resetLimit=false){
 if(resetLimit) displayLimit=30;
 const list=document.getElementById('list');
 const query=document.getElementById('search').value.toLowerCase();
+const colors={book:'#3498db',cd:'#9b59b6',record:'#e67e22',other:'#95a5a6'};
 list.innerHTML='';
-let filtered = items.filter(i => (i.title+i.creator+i.code).toLowerCase().includes(query));
-filtered.slice(0, displayLimit).forEach((item, idx) => {
+
+let filtered = items.filter(i => (i.title+(i.creator||"")+(i.code||"")).toLowerCase().includes(query));
+filtered.slice(0, displayLimit).forEach((item) => {
 const card=document.createElement('div');
 card.className='item-card';
 card.innerHTML=`
 <img src="${item.img||'https://via.placeholder.com/100?text=No+Img'}" class="item-img">
 <div class="item-main">
-<span class="tag" style="background:#3498db">${item.type}</span>
-<div style="font-weight:bold; font-size:0.9em;">${item.title}</div>
-<div style="font-size:0.75em;color:#666;">${item.creator}</div>
+<span class="tag" style="background:${colors[item.type]}">${item.type}</span>
+<div class="item-title">${item.title}</div>
+<div class="item-info">👤 ${item.creator || '不明'} | 📍 ${item.location || '-'}</div>
+<div class="item-info" style="font-size:0.7em; color:#999;">🆔 ${item.code || ''}</div>
 </div>
-<button class="btn btn-ghost" onclick="deleteItem(${items.indexOf(item)})">🗑</button>`;
+<button class="btn-delete" onclick="deleteItem(${items.indexOf(item)})">🗑</button>`;
 list.appendChild(card);
 });
 setTimeout(updateCharts, 300);
 }
 
 function deleteItem(index){
-if(confirm("削除しますか？")){ items.splice(index,1); syncToCloud().then(render); }
+if(confirm(`「${items[index].title}」を削除しますか？`)){ 
+items.splice(index,1); syncToCloud().then(render); 
+}
 }
 
 function sortData(key,order){
-items.sort((a,b)=>order==='asc'?(a[key]||'').localeCompare(b[key]||''):(b[key]||'').localeCompare(a[key]||''));
+items.sort((a,b)=>order==='asc'?(a[key]||'').toString().localeCompare((b[key]||'').toString()):(b[key]||'').toString().localeCompare((a[key]||'').toString()));
 render(true);
 }
 
-function resetForm(){ document.querySelectorAll('#registration-form input').forEach(i=>i.value=''); }
+function resetForm(){ 
+document.querySelectorAll('#registration-form input').forEach(i=>i.value=''); 
+document.getElementById('edit-index').value="-1";
+}
 
 function updateCharts() {
     let counts = {book: 0, cd: 0, record: 0, other: 0};
@@ -217,40 +239,41 @@ function updateCharts() {
     items.forEach(item => {
         counts[item.type]++;
         const m = (item.date || "").substring(0, 7);
-        if (m) monthlySpend[m] = (monthlySpend[m] || 0) + (parseInt(item.price) || 0);
+        if (m && m.match(/^\d{4}-\d{2}$/)) monthlySpend[m] = (monthlySpend[m] || 0) + (parseInt(item.price) || 0);
     });
 
     const opt = { 
-        responsive: true, 
-        maintainAspectRatio: false, 
+        responsive: true, maintainAspectRatio: false, 
         plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
     };
 
     if (pieChart) pieChart.destroy();
     pieChart = new Chart(document.getElementById('pieChart'), {
         type: 'doughnut',
-        data: { labels: ['本', 'CD', 'レコード', '他'], datasets: [{ data: Object.values(counts), backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#95a5a6'] }] },
-        options: opt
+        data: { labels: ['本', 'CD', 'レコード', '他'], datasets: [{ data: [counts.book, counts.cd, counts.record, counts.other], backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#95a5a6'] }] },
+        options: { ...opt, plugins: { ...opt.plugins, title: { display: true, text: 'カテゴリ内訳' } } }
     });
 
     if (lineChart) lineChart.destroy();
     const sorted = Object.keys(monthlySpend).sort().slice(-6);
     lineChart = new Chart(document.getElementById('lineChart'), {
         type: 'line',
-        data: { labels: sorted, datasets: [{ label: '円', data: sorted.map(m => monthlySpend[m]), borderColor: '#27ae60', tension: 0.4 }] },
-        options: { ...opt, scales: { y: { ticks: { font: { size: 8 } } }, x: { ticks: { font: { size: 8 } } } } }
+        data: { labels: sorted, datasets: [{ label: '円', data: sorted.map(m => monthlySpend[m]), borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.1)', fill: true, tension: 0.4 }] },
+        options: { ...opt, plugins: { ...opt.plugins, title: { display: true, text: '月別支出トレンド' } }, scales: { y: { ticks: { font: { size: 9 }, callback: v => v.toLocaleString() } }, x: { ticks: { font: { size: 9 } } } } }
     });
 }
 
 function exportCSV() {
-    let csv = "種別,タイトル,作者,価格,日付\n" + items.map(i => `"${i.type}","${i.title}","${i.creator}","${i.price}","${i.date}"`).join("\n");
+    let csv = "種別,タイトル,作者,コード,価格,購入店,場所,状態,日付\n" + 
+    items.map(i => `"${i.type}","${i.title}","${i.creator}","${i.code}","${i.price}","${i.shop}","${i.location}","${i.condition}","${i.date}"`).join("\n");
     const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: "text/csv" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "backup.csv";
+    link.download = `backup_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
 }
 
+document.getElementById('date').value=new Date().toISOString().split('T')[0];
 loadData();
 </script>
 </body>
