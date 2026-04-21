@@ -10,8 +10,10 @@
 body { font-family: sans-serif; background: var(--bg); padding: 20px; color: #333; margin: 0; }
 .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
 .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
-.card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 15px; min-height: 250px; }
-.chart-container { height: 220px; position: relative; width: 100%; }
+/* カード内のpaddingを10pxに微調整 */
+.card { background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 15px; min-height: 260px; box-sizing: border-box; }
+/* コンテナから絶対にはみ出さない設定 */
+.chart-container { height: 220px; position: relative; width: 100%; box-sizing: border-box; }
 .form-section { background: #edf2f7; padding: 20px; border-radius: 15px; margin-bottom: 30px; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
 input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 16px; }
@@ -290,7 +292,14 @@ function updateCharts() {
         }
     });
 
-    // 1. 円グラフ（ドーナツ型）
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { left: 5, right: 15, top: 5, bottom: 5 } },
+        animation: { duration: 800 }
+    };
+
+    // 1. 円グラフ
     const pieCtx = document.getElementById('pieChart').getContext('2d');
     if (pieChart) pieChart.destroy();
     pieChart = new Chart(pieCtx, {
@@ -303,18 +312,15 @@ function updateCharts() {
                 borderWidth: 2
             }]
         },
-        options: { 
-            maintainAspectRatio: false, 
-            animation: { duration: 800 },
+        options: {
+            ...commonOptions,
             plugins: { title: { display: true, text: 'カテゴリ内訳' } } 
         }
     });
 
-    // 2. 折れ線グラフ（支出推移）
+    // 2. 折れ線グラフ
     const lineCtx = document.getElementById('lineChart').getContext('2d');
     if (lineChart) lineChart.destroy();
-
-    // 月を時系列でソートして直近6ヶ月分を表示
     const sortedMonths = Object.keys(monthlySpend).sort().slice(-6);
 
     lineChart = new Chart(lineCtx, {
@@ -333,11 +339,13 @@ function updateCharts() {
             }]
         },
         options: { 
-            maintainAspectRatio: false, 
-            animation: { duration: 800 },
+            ...commonOptions,
             plugins: { title: { display: true, text: '月別支出トレンド' } },
             scales: {
-                y: { beginAtZero: true, ticks: { callback: value => value.toLocaleString() + '円' } }
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { callback: value => value.toLocaleString() + '円' } 
+                }
             }
         }
     });
@@ -405,38 +413,3 @@ loadData();
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
