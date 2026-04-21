@@ -13,8 +13,9 @@ body { font-family: sans-serif; background: var(--bg); padding: 10px; color: #33
 .dashboard { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
 @media (min-width: 768px) { .dashboard { display: grid; grid-template-columns: 1fr 1fr; } }
 
-.card { background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 15px; height: 260px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; }
-.chart-container { flex-grow: 1; width: 100%; position: relative; }
+/* カードの高さに余裕を持たせ、中身が絶対にはみ出さないように設定 */
+.card { background: #fff; border: 1px solid #eee; padding: 12px; border-radius: 15px; height: 280px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+.chart-container { flex-grow: 1; width: 100%; position: relative; min-height: 0; }
 
 .form-section { background: #edf2f7; padding: 15px; border-radius: 15px; margin-bottom: 20px; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
@@ -242,24 +243,75 @@ function updateCharts() {
         if (m && m.match(/^\d{4}-\d{2}$/)) monthlySpend[m] = (monthlySpend[m] || 0) + (parseInt(item.price) || 0);
     });
 
+    // グラフの共通オプションを定義
     const opt = { 
-        responsive: true, maintainAspectRatio: false, 
-        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
+        responsive: true, 
+        maintainAspectRatio: false,
+        layout: {
+            padding: { bottom: 10 } // 下側に余白を作って途切れを防止
+        },
+        plugins: { 
+            legend: { 
+                position: 'bottom', 
+                labels: { 
+                    boxWidth: 10, 
+                    padding: 10, // 凡例同士の間隔を広げる
+                    font: { size: 10 } 
+                } 
+            } 
+        }
     };
 
+    // 1. 円グラフ（ドーナツ型）
     if (pieChart) pieChart.destroy();
     pieChart = new Chart(document.getElementById('pieChart'), {
         type: 'doughnut',
-        data: { labels: ['本', 'CD', 'レコード', '他'], datasets: [{ data: [counts.book, counts.cd, counts.record, counts.other], backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#95a5a6'] }] },
-        options: { ...opt, plugins: { ...opt.plugins, title: { display: true, text: 'カテゴリ内訳' } } }
+        data: { 
+            labels: ['本', 'CD', 'レコード', '他'], 
+            datasets: [{ 
+                data: [counts.book, counts.cd, counts.record, counts.other], 
+                backgroundColor: ['#3498db', '#9b59b6', '#e67e22', '#95a5a6'],
+                borderWidth: 1
+            }] 
+        },
+        options: { 
+            ...opt, 
+            plugins: { 
+                ...opt.plugins, 
+                title: { display: true, text: 'カテゴリ内訳', padding: { bottom: 5 } } 
+            } 
+        }
     });
 
+    // 2. 折れ線グラフ（支出推移）
     if (lineChart) lineChart.destroy();
-    const sorted = Object.keys(monthlySpend).sort().slice(-6);
+    const sortedMonths = Object.keys(monthlySpend).sort().slice(-6);
     lineChart = new Chart(document.getElementById('lineChart'), {
         type: 'line',
-        data: { labels: sorted, datasets: [{ label: '円', data: sorted.map(m => monthlySpend[m]), borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.1)', fill: true, tension: 0.4 }] },
-        options: { ...opt, plugins: { ...opt.plugins, title: { display: true, text: '月別支出トレンド' } }, scales: { y: { ticks: { font: { size: 9 }, callback: v => v.toLocaleString() } }, x: { ticks: { font: { size: 9 } } } } }
+        data: { 
+            labels: sortedMonths, 
+            datasets: [{ 
+                label: '支出 (円)', 
+                data: sortedMonths.map(m => monthlySpend[m]), 
+                borderColor: '#27ae60', 
+                backgroundColor: 'rgba(39,174,96,0.1)', 
+                fill: true, 
+                tension: 0.4,
+                pointRadius: 4
+            }] 
+        },
+        options: { 
+            ...opt, 
+            plugins: { 
+                ...opt.plugins, 
+                title: { display: true, text: '月別支出トレンド', padding: { bottom: 5 } },
+                legend: { display: false } // 折れ線は凡例なしでスッキリ
+            }, 
+            scales: { 
+                y: { ticks: { font: { size: 9 }, callback: v => v.toLocaleString() } }, 
+                x: { ticks: { font: { size: 9 } } } 
+            } 
+        }
     });
 }
 
