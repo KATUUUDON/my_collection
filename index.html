@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Collection Master PRO - Ultimate</title>
+<title>Collection Master PRO - Rich Layout</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e74c3c; --bg: #f4f7f6; }
@@ -16,18 +16,29 @@ body { font-family: sans-serif; background: var(--bg); padding: 10px; color: #33
 .form-section { background: #edf2f7; padding: 15px; border-radius: 15px; margin-bottom: 20px; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
 input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 16px; }
-.item-card { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; background: #fff; }
-.item-img { width: 55px; height: 55px; object-fit: cover; border-radius: 6px; margin-right: 10px; background: #eee; flex-shrink: 0; }
-.item-main { flex-grow: 1; min-width: 0; padding-right: 5px; }
-.item-title { font-weight: bold; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
-.item-details { font-size: 0.8rem; color: #555; line-height: 1.3; }
-.tag { font-size: 0.7em; padding: 1px 5px; border-radius: 4px; color: white; margin-right: 5px; font-weight: bold; }
+
+/* カードサイズをUPし、ゆとりを持たせたレイアウト */
+.item-card { 
+    display: flex; 
+    align-items: center; 
+    padding: 15px; /* 余白を増やしました */
+    border-bottom: 1px solid #eee; 
+    background: #fff;
+    min-height: 100px; /* 高さを確保 */
+}
+.item-img { width: 75px; height: 75px; object-fit: cover; border-radius: 8px; margin-right: 15px; background: #eee; flex-shrink: 0; }
+.item-main { flex-grow: 1; min-width: 0; padding-right: 10px; }
+.item-title { font-weight: bold; font-size: 1.05rem; margin-bottom: 4px; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-details { font-size: 0.85rem; color: #555; line-height: 1.6; } /* 行間を広げて読みやすく */
+.tag { font-size: 0.75em; padding: 2px 6px; border-radius: 4px; color: white; margin-right: 5px; font-weight: bold; vertical-align: middle; }
+.id-highlight { color: #888; font-family: monospace; background: #f0f0f0; padding: 1px 4px; border-radius: 3px; }
 .date-highlight { color: var(--accent); font-weight: bold; }
+
 .btn { padding: 12px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
 .btn-success { background: var(--success); color: white; width: 100%; margin-top: 10px; font-size: 1.1em; }
 .btn-ghost { background: #e2e8f0; color: #4a5568; font-size: 0.85em; }
-.btn-action-group { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
-.btn-action { background: none; border: none; font-size: 1.3em; cursor: pointer; padding: 4px; }
+.btn-action-group { display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
+.btn-action { background: none; border: none; font-size: 1.5em; cursor: pointer; padding: 5px; }
 .sync-status { text-align: right; font-size: 0.75em; color: #666; margin-bottom: 5px; }
 </style>
 </head>
@@ -37,7 +48,7 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
         <h1 style="color:var(--primary); margin:0; font-size: 1.5em;">Collection PRO</h1>
     </header>
 
-    <div id="sync-status" class="sync-status">⏳ 更新中...</div>
+    <div id="sync-status" class="sync-status">⏳ 読み込み中...</div>
 
     <div class="dashboard">
         <div class="card"><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
@@ -49,7 +60,7 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
             <select id="type"><option value="book">📚 本</option><option value="cd">💿 CD</option><option value="record" selected>🎸 レコード</option></select>
             <input type="text" id="title" placeholder="タイトル（必須）">
             <input type="text" id="creator" placeholder="作者 / アーティスト">
-            <input type="text" id="code" placeholder="品番">
+            <input type="text" id="code" placeholder="品番（識別コード）">
             <input type="number" id="price" placeholder="価格（円）">
             <input type="text" id="shop" placeholder="購入店">
             <input type="text" id="location" placeholder="場所">
@@ -62,7 +73,7 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
         <button id="cancel-btn" class="btn btn-ghost" onclick="resetForm()" style="width:100%; margin-top:5px; display:none;">キャンセル</button>
     </div>
 
-    <div id="list" style="margin-top: 10px;"></div>
+    <div id="list" style="margin-top: 10px; border-top: 1px solid #eee;"></div>
     <div id="load-more-container" style="text-align:center; padding:20px; display:none;">
         <button class="btn btn-primary" onclick="loadMore()" style="width:80%;">さらに表示</button>
     </div>
@@ -112,14 +123,15 @@ function render(reset = false){
         const originalIndex = items.indexOf(item);
         const card = document.createElement('div');
         card.className = 'item-card';
-        // 状態を省き、日付(🗓)とゴミ箱(🗑️)を確実に配置
+        // 品番(ID)を復活させ、サイズにゆとりを持たせた表示
         card.innerHTML = `
             <img src="${item.img || 'https://via.placeholder.com/100?text=No+Img'}" class="item-img">
             <div class="item-main">
                 <div class="item-title"><span class="tag" style="background:${item.type==='record'?'#e67e22':item.type==='cd'?'#9b59b6':'#3498db'}">${item.type}</span>${item.title}</div>
                 <div class="item-details">
                     👤 ${item.creator || '---'}<br>
-                    💰 ${Number(item.price).toLocaleString()}円 / <span class="date-highlight">🗓 ${String(item.date).substring(0,10)}</span>
+                    🆔 <span class="id-highlight">${item.code || '---'}</span><br>
+                    💰 ${Number(item.price).toLocaleString()}円 / <span class="date-highlight">📅 ${String(item.date).substring(0,10)}</span>
                 </div>
             </div>
             <div class="btn-action-group">
@@ -160,7 +172,6 @@ function editItem(idx){
     window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
-// グラフ
 function updateCharts() {
     let counts = {book:0, cd:0, record:0, other:0};
     let monthlySpend = {};
