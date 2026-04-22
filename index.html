@@ -104,7 +104,6 @@ async function saveItem(){
     if(!title) return alert("タイトルを入力してください");
     const saveBtn = document.getElementById('main-save-btn');
     saveBtn.disabled = true;
-    saveBtn.innerText = "⏳ 保存中...";
     
     const item = {
         type: document.getElementById('type').value,
@@ -126,15 +125,9 @@ async function saveItem(){
 
     try {
         const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(tempItems) });
-        if(res.ok) {
-            items = tempItems;
-            updateUI();
-            resetForm();
-            alert("クラウドに保存しました");
-        }
+        if(res.ok) { items = tempItems; updateUI(); resetForm(); }
     } catch(e) { alert("保存に失敗しました"); }
     saveBtn.disabled = false;
-    saveBtn.innerText = "クラウドに保存して同期";
 }
 
 function render(reset = false){
@@ -160,12 +153,11 @@ function render(reset = false){
                     📍 ${item.location || '保管場所未定'}
                 </div>
             </div>
-            <button class="btn-action" onclick="editItem(${originalIndex})" title="編集">📝</button>
-            <button class="btn-action" style="color:var(--error)" onclick="deleteItem(${originalIndex})" title="削除">🗑️</button>
+            <button class="btn-action" onclick="editItem(${originalIndex})">📝</button>
+            <button class="btn-action" style="color:var(--error)" onclick="deleteItem(${originalIndex})">🗑️</button>
         `;
         list.appendChild(card);
     });
-
     document.getElementById('load-more-container').style.display = filtered.length > displayLimit ? 'block' : 'none';
     updateCharts();
 }
@@ -197,40 +189,41 @@ function editItem(idx){
 }
 
 async function deleteItem(idx){
-    if(!confirm("このデータを削除してもよろしいですか？")) return;
+    if(!confirm("削除しますか？")) return;
     let tempItems = [...items];
     tempItems.splice(idx, 1);
-    document.getElementById('sync-status').innerText = "⏳ 削除中...";
     try {
         const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(tempItems) });
         if(res.ok) { items = tempItems; updateUI(); }
-    } catch(e) { alert("削除に失敗しました"); }
+    } catch(e) { alert("削除失敗"); }
 }
 
 function resetForm(){
     document.getElementById('edit-index').value = "-1";
     document.getElementById('title').value = "";
-    document.getElementById('creator').value = "";
-    document.getElementById('code').value = "";
-    document.getElementById('price').value = "";
-    document.getElementById('shop').value = "";
-    document.getElementById('location').value = "";
     document.getElementById('main-save-btn').innerText = "クラウドに保存して同期";
     document.getElementById('cancel-btn').style.display = "none";
 }
 
+// 【強化版】グラフ更新ロジック
 function updateCharts() {
     let counts = {book:0, cd:0, record:0, other:0};
     let monthlySpend = {};
+    
     items.forEach(i => {
         counts[i.type || 'other']++;
-        let d = i.date ? i.date.toString().replace(/\//g, '-') : "";
-        let m = d.substring(0, 7);
-        if(m.match(/^\d{4}-\d{2}$/)) {
-            monthlySpend[m] = (monthlySpend[m] || 0) + (parseInt(i.price) || 0);
+        
+        // 日付の正規化 (スラッシュをハイフンに、時刻部分を削除)
+        let rawDate = (i.date || "").toString();
+        let cleanDate = rawDate.replace(/\//g, '-').split('T')[0];
+        let m = cleanDate.substring(0, 7); // YYYY-MM 形式を抽出
+        
+        if(m && m.match(/^\d{4}-\d{2}$/)) {
+            monthlySpend[m] = (monthlySpend[m] || 0) + (Number(i.price) || 0);
         }
     });
 
+    // 円グラフ
     if(pieChart) pieChart.destroy();
     pieChart = new Chart(document.getElementById('pieChart'), {
         type: 'doughnut',
@@ -241,15 +234,20 @@ function updateCharts() {
         options: { maintainAspectRatio: false, plugins: { title: { display: true, text: '種類別内訳' } } }
     });
 
+    // 収支グラフ (直近6ヶ月)
     if(lineChart) lineChart.destroy();
     const sortedMonths = Object.keys(monthlySpend).sort().slice(-6);
     lineChart = new Chart(document.getElementById('lineChart'), {
         type: 'line',
         data: {
             labels: sortedMonths,
-            datasets: [{ label: '月別支出(円)', data: sortedMonths.map(m => monthlySpend[m]), borderColor: '#27ae60', tension: 0.3, fill: true, backgroundColor: 'rgba(39, 174, 96, 0.1)' }]
+            datasets: [{ label: '月別支出(円)', data: sortedMonths.map(m => monthlySpend[m]), borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3 }]
         },
-        options: { maintainAspectRatio: false, plugins: { title: { display: true, text: '最近の支出推移' } } }
+        options: { 
+            maintainAspectRatio: false, 
+            plugins: { title: { display: true, text: '月別の購入合計（直近6回分）' } },
+            scales: { y: { beginAtZero: true } }
+        }
     });
 }
 
