@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Collection Master PRO - Final</title>
+<title>Collection Master PRO - Ultimate</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e74c3c; --bg: #f4f7f6; }
@@ -22,13 +22,12 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 .item-title { font-weight: bold; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
 .item-details { font-size: 0.8em; color: #666; line-height: 1.5; }
 .tag { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; color: white; margin-right: 5px; font-weight: bold; }
-.btn { padding: 12px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+.btn { padding: 12px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
 .btn-primary { background: var(--accent); color: white; }
 .btn-success { background: var(--success); color: white; width: 100%; margin-top: 15px; font-size: 1.1em; }
 .btn-ghost { background: #e2e8f0; color: #4a5568; font-size: 0.85em; }
 .btn-action { background: none; border: none; font-size: 1.4em; cursor: pointer; padding: 8px; }
 .sync-status { text-align: right; font-size: 0.75em; color: #666; margin-bottom: 5px; }
-.load-more-area { text-align: center; padding: 20px 0; }
 </style>
 </head>
 <body>
@@ -56,8 +55,7 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
                 <input type="text" id="location" placeholder="保管場所">
                 <select id="condition"><option value="新品">新品</option><option value="中古">中古</option><option value="未開封">未開封</option></select>
                 <input type="date" id="date">
-                <input type="hidden" id="edit-index" value="-1">
-                <input type="hidden" id="img-url">
+                <input type="hidden" id="edit-index" value="-1"><input type="hidden" id="img-url">
             </div>
             <button id="main-save-btn" class="btn btn-success" onclick="saveItem()">クラウドに保存して同期</button>
             <button id="cancel-btn" class="btn btn-ghost" onclick="resetForm()" style="width:100%; margin-top:8px; display:none;">キャンセルして新規入力に戻る</button>
@@ -74,7 +72,7 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
     </div>
 
     <div id="list"></div>
-    <div id="load-more-container" class="load-more-area" style="display:none;">
+    <div id="load-more-container" style="text-align:center; padding:20px; display:none;">
         <button class="btn btn-primary" onclick="loadMore()" style="width:80%;">さらに表示する</button>
     </div>
 </div>
@@ -89,9 +87,7 @@ async function loadData() {
         const res = await fetch(`${GAS_URL}?t=${Date.now()}`);
         items = await res.json();
         updateUI();
-    } catch(e){ 
-        document.getElementById('sync-status').innerText = "❌ 接続エラー"; 
-    }
+    } catch(e){ document.getElementById('sync-status').innerText = "❌ 接続エラー"; }
 }
 
 function updateUI() {
@@ -101,32 +97,25 @@ function updateUI() {
 
 async function saveItem(){
     const title = document.getElementById('title').value.trim();
-    if(!title) return alert("タイトルを入力してください");
+    if(!title) return alert("タイトル必須");
     const saveBtn = document.getElementById('main-save-btn');
     saveBtn.disabled = true;
-    
     const item = {
-        type: document.getElementById('type').value,
-        title: title,
-        creator: document.getElementById('creator').value,
-        code: document.getElementById('code').value,
-        price: parseInt(document.getElementById('price').value) || 0,
-        shop: document.getElementById('shop').value,
-        location: document.getElementById('location').value,
-        condition: document.getElementById('condition').value,
+        type: document.getElementById('type').value, title: title,
+        creator: document.getElementById('creator').value, code: document.getElementById('code').value,
+        price: parseInt(document.getElementById('price').value) || 0, shop: document.getElementById('shop').value,
+        location: document.getElementById('location').value, condition: document.getElementById('condition').value,
         date: document.getElementById('date').value || new Date().toISOString().split('T')[0],
         img: document.getElementById('img-url').value
     };
-
     let tempItems = [...items];
     const editIdx = parseInt(document.getElementById('edit-index').value);
     if(editIdx === -1) tempItems.unshift(item);
     else tempItems[editIdx] = item;
-
     try {
         const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(tempItems) });
         if(res.ok) { items = tempItems; updateUI(); resetForm(); }
-    } catch(e) { alert("保存に失敗しました"); }
+    } catch(e) { alert("保存失敗"); }
     saveBtn.disabled = false;
 }
 
@@ -135,37 +124,19 @@ function render(reset = false){
     const list = document.getElementById('list');
     const query = document.getElementById('search').value.toLowerCase();
     list.innerHTML = '';
-    
     const filtered = items.filter(i => (i.title + (i.creator || "") + (i.code || "")).toLowerCase().includes(query));
-    
     filtered.slice(0, displayLimit).forEach((item) => {
         const originalIndex = items.indexOf(item);
         const card = document.createElement('div');
         card.className = 'item-card';
-        card.innerHTML = `
-            <img src="${item.img || 'https://via.placeholder.com/100?text=No+Img'}" class="item-img">
-            <div class="item-main">
-                <div><span class="tag" style="background:${item.type==='record'?'#e67e22':item.type==='cd'?'#9b59b6':'#3498db'}">${item.type}</span></div>
-                <div class="item-title">${item.title}</div>
-                <div class="item-details">
-                    👤 ${item.creator || '不明'}<br>
-                    🆔 ${item.code || '---'}<br>
-                    📍 ${item.location || '保管場所未定'}
-                </div>
-            </div>
-            <button class="btn-action" onclick="editItem(${originalIndex})">📝</button>
-            <button class="btn-action" style="color:var(--error)" onclick="deleteItem(${originalIndex})">🗑️</button>
-        `;
+        card.innerHTML = `<img src="${item.img || 'https://via.placeholder.com/100?text=No+Img'}" class="item-img"><div class="item-main"><div><span class="tag" style="background:${item.type==='record'?'#e67e22':item.type==='cd'?'#9b59b6':'#3498db'}">${item.type}</span></div><div class="item-title">${item.title}</div><div class="item-details">👤 ${item.creator || '不明'}<br>🆔 ${item.code || '---'}<br>📍 ${item.location || '未定'}</div></div><button class="btn-action" onclick="editItem(${originalIndex})">📝</button><button class="btn-action" style="color:var(--error)" onclick="deleteItem(${originalIndex})">🗑️</button>`;
         list.appendChild(card);
     });
     document.getElementById('load-more-container').style.display = filtered.length > displayLimit ? 'block' : 'none';
     updateCharts();
 }
 
-function loadMore() {
-    displayLimit += 30;
-    render();
-}
+function loadMore() { displayLimit += 30; render(); }
 
 function editItem(idx){
     const i = items[idx];
@@ -177,11 +148,8 @@ function editItem(idx){
     document.getElementById('shop').value = i.shop;
     document.getElementById('location').value = i.location;
     document.getElementById('condition').value = i.condition;
-    
     let d = i.date ? i.date.toString().replace(/\//g, '-') : "";
-    if(d.length > 10) d = d.substring(0, 10);
-    document.getElementById('date').value = d;
-
+    document.getElementById('date').value = d.substring(0, 10);
     document.getElementById('edit-index').value = idx;
     document.getElementById('main-save-btn').innerText = "修正を保存する";
     document.getElementById('cancel-btn').style.display = "block";
@@ -190,12 +158,9 @@ function editItem(idx){
 
 async function deleteItem(idx){
     if(!confirm("削除しますか？")) return;
-    let tempItems = [...items];
-    tempItems.splice(idx, 1);
-    try {
-        const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(tempItems) });
-        if(res.ok) { items = tempItems; updateUI(); }
-    } catch(e) { alert("削除失敗"); }
+    items.splice(idx, 1);
+    await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(items) });
+    updateUI();
 }
 
 function resetForm(){
@@ -205,67 +170,48 @@ function resetForm(){
     document.getElementById('cancel-btn').style.display = "none";
 }
 
-// 【強化版】グラフ更新ロジック
 function updateCharts() {
     let counts = {book:0, cd:0, record:0, other:0};
     let monthlySpend = {};
     
     items.forEach(i => {
         counts[i.type || 'other']++;
-        
-        // 日付の正規化 (スラッシュをハイフンに、時刻部分を削除)
-        let rawDate = (i.date || "").toString();
-        let cleanDate = rawDate.replace(/\//g, '-').split('T')[0];
-        let m = cleanDate.substring(0, 7); // YYYY-MM 形式を抽出
-        
+        let d = (i.date || "").toString().replace(/\//g, '-');
+        let m = d.substring(0, 7);
         if(m && m.match(/^\d{4}-\d{2}$/)) {
             monthlySpend[m] = (monthlySpend[m] || 0) + (Number(i.price) || 0);
         }
     });
 
-    // 円グラフ
     if(pieChart) pieChart.destroy();
     pieChart = new Chart(document.getElementById('pieChart'), {
         type: 'doughnut',
-        data: {
-            labels: ['本', 'CD', 'レコード'],
-            datasets: [{ data: [counts.book, counts.cd, counts.record], backgroundColor: ['#3498db', '#9b59b6', '#e67e22'] }]
-        },
+        data: { labels: ['本', 'CD', 'レコード'], datasets: [{ data: [counts.book, counts.cd, counts.record], backgroundColor: ['#3498db', '#9b59b6', '#e67e22'] }] },
         options: { maintainAspectRatio: false, plugins: { title: { display: true, text: '種類別内訳' } } }
     });
 
-    // 収支グラフ (直近6ヶ月)
     if(lineChart) lineChart.destroy();
-    const sortedMonths = Object.keys(monthlySpend).sort().slice(-6);
+    const sortedMonths = Object.keys(monthlySpend).sort(); // 全期間表示
     lineChart = new Chart(document.getElementById('lineChart'), {
         type: 'line',
         data: {
             labels: sortedMonths,
-            datasets: [{ label: '月別支出(円)', data: sortedMonths.map(m => monthlySpend[m]), borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3 }]
+            datasets: [{ label: '購入総額(円)', data: sortedMonths.map(m => monthlySpend[m]), borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3 }]
         },
-        options: { 
-            maintainAspectRatio: false, 
-            plugins: { title: { display: true, text: '月別の購入合計（直近6回分）' } },
-            scales: { y: { beginAtZero: true } }
-        }
+        options: { maintainAspectRatio: false, plugins: { title: { display: true, text: '月別支出推移（全期間）' } } }
     });
 }
 
 function sortData(k, o){
-    items.sort((a,b) => o === 'asc' ? 
-        (a[k]||"").toString().localeCompare((b[k]||"").toString()) : 
-        (b[k]||"").toString().localeCompare((a[k]||"").toString())
-    );
+    items.sort((a,b) => o === 'asc' ? (a[k]||"").toString().localeCompare((b[k]||"").toString()) : (b[k]||"").toString().localeCompare((a[k]||"").toString()));
     render(true);
 }
 
 function exportCSV(){
-    let csv = "\uFEFF種別,タイトル,作者,コード,価格,店,場所,状態,日付\n" + 
-        items.map(i => `"${i.type}","${i.title}","${i.creator}","${i.code}","${i.price}","${i.shop}","${i.location}","${i.condition}","${i.date}"`).join("\n");
+    let csv = "\uFEFF種別,タイトル,作者,コード,価格,店,場所,状態,日付\n" + items.map(i => `"${i.type}","${i.title}","${i.creator}","${i.code}","${i.price}","${i.shop}","${i.location}","${i.condition}","${i.date}"`).join("\n");
     const link = document.createElement("a");
     link.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
-    link.download = "collection_backup.csv";
-    link.click();
+    link.download = "backup.csv"; link.click();
 }
 
 document.getElementById('date').value = new Date().toISOString().split('T')[0];
