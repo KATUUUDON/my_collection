@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Collection Master PRO - Perfect Edition</title>
+<title>Collection Master PRO - Final</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e74c3c; --bg: #f4f7f6; }
@@ -16,78 +16,82 @@ body { font-family: sans-serif; background: var(--bg); padding: 10px; color: #33
 .form-section { background: #edf2f7; padding: 15px; border-radius: 15px; margin-bottom: 20px; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
 input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 16px; }
-.status-msg { margin: 10px 0; padding: 12px; border-radius: 10px; font-weight: bold; text-align: center; display: none; }
 .item-card { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; background: #fff; }
 .item-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; margin-right: 12px; background: #eee; flex-shrink: 0; }
 .item-main { flex-grow: 1; min-width: 0; }
 .item-title { font-weight: bold; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tag { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; color: white; margin-right: 5px; font-weight: bold; }
-.btn { padding: 12px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+.btn { padding: 12px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
 .btn-primary { background: var(--accent); color: white; }
 .btn-success { background: var(--success); color: white; width: 100%; margin-top: 15px; font-size: 1.1em; }
 .btn-ghost { background: #e2e8f0; color: #4a5568; font-size: 0.85em; }
-.btn-action { background: none; border: none; font-size: 1.3em; cursor: pointer; padding: 5px; }
+.btn-action { background: none; border: none; font-size: 1.4em; cursor: pointer; padding: 8px; }
 .sync-status { text-align: right; font-size: 0.75em; color: #666; margin-bottom: 5px; }
 .load-more-area { text-align: center; padding: 20px 0; }
 </style>
 </head>
 <body>
 <div class="container">
-<header style="text-align:center; margin-bottom:15px;">
-<h1 style="color:var(--primary); margin:0; font-size: 1.8em;">Collection Master PRO</h1>
-</header>
-<div id="sync-status" class="sync-status">読み込み中...</div>
-<div class="dashboard">
-    <div class="card"><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
-    <div class="card"><div class="chart-container"><canvas id="lineChart"></canvas></div></div>
-</div>
+    <header style="text-align:center; margin-bottom:15px;">
+        <h1 style="color:var(--primary); margin:0; font-size: 1.6em;">My Collection Dashboard</h1>
+    </header>
 
-<div class="form-section">
-<div id="registration-form">
-<div class="form-grid">
-<select id="type"><option value="book">📚 本</option><option value="cd">💿 CD</option><option value="record" selected>🎸 レコード</option></select>
-<input type="text" id="title" placeholder="タイトル（必須）">
-<input type="text" id="creator" placeholder="作者 / アーティスト">
-<input type="text" id="code" placeholder="識別コード">
-<input type="number" id="price" placeholder="価格（円）">
-<input type="text" id="shop" placeholder="購入店舗">
-<input type="text" id="location" placeholder="保管場所">
-<select id="condition"><option value="新品">新品</option><option value="中古">中古</option><option value="未開封">未開封</option></select>
-<input type="date" id="date">
-<input type="hidden" id="edit-index" value="-1">
-<input type="hidden" id="img-url">
-</div>
-<button id="main-save-btn" class="btn btn-success" onclick="saveItem()">クラウドに保存して同期</button>
-<button id="cancel-btn" class="btn btn-ghost" onclick="resetForm()" style="width:100%; margin-top:8px; display:none;">キャンセル</button>
-</div>
-</div>
+    <div id="sync-status" class="sync-status">⏳ 接続中...</div>
 
-<div style="background:#fff; padding:12px; border-radius:12px; margin-bottom:20px; border:1px solid #eee;">
-<input type="text" id="search" placeholder="検索..." style="width:100%; padding:10px; margin-bottom:10px;" oninput="render(true)">
-<div style="display:flex; gap:8px;">
-<button class="btn btn-ghost" onclick="sortData('date', 'desc')">📅 新着順</button>
-<button class="btn btn-ghost" onclick="sortData('title', 'asc')">🔤 名前順</button>
-<button class="btn btn-primary" onclick="exportCSV()" style="margin-left:auto;">📥CSV</button>
-</div>
-</div>
+    <div class="dashboard">
+        <div class="card"><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
+        <div class="card"><div class="chart-container"><canvas id="lineChart"></canvas></div></div>
+    </div>
 
-<div id="list"></div>
-<div id="load-more-container" class="load-more-area" style="display:none;">
-    <button class="btn btn-primary" onclick="loadMore()" style="width:80%;">さらに表示する</button>
-</div>
+    <div class="form-section">
+        <div id="registration-form">
+            <div class="form-grid">
+                <select id="type"><option value="book">📚 本</option><option value="cd">💿 CD</option><option value="record" selected>🎸 レコード</option></select>
+                <input type="text" id="title" placeholder="タイトル（必須）">
+                <input type="text" id="creator" placeholder="作者 / アーティスト">
+                <input type="text" id="code" placeholder="識別コード">
+                <input type="number" id="price" placeholder="価格（円）">
+                <input type="text" id="shop" placeholder="購入店舗">
+                <input type="text" id="location" placeholder="保管場所">
+                <select id="condition"><option value="新品">新品</option><option value="中古">中古</option><option value="未開封">未開封</option></select>
+                <input type="date" id="date">
+                <input type="hidden" id="edit-index" value="-1">
+                <input type="hidden" id="img-url">
+            </div>
+            <button id="main-save-btn" class="btn btn-success" onclick="saveItem()">クラウドに保存して同期</button>
+            <button id="cancel-btn" class="btn btn-ghost" onclick="resetForm()" style="width:100%; margin-top:8px; display:none;">キャンセルして新規入力に戻る</button>
+        </div>
+    </div>
+
+    <div style="background:#fff; padding:12px; border-radius:12px; margin-bottom:20px; border:1px solid #eee;">
+        <input type="text" id="search" placeholder="コレクションを検索..." style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
+        <div style="display:flex; gap:8px;">
+            <button class="btn btn-ghost" onclick="sortData('date', 'desc')">📅 新着順</button>
+            <button class="btn btn-ghost" onclick="sortData('title', 'asc')">🔤 名前順</button>
+            <button class="btn btn-primary" onclick="exportCSV()" style="margin-left:auto;">📥 CSV保存</button>
+        </div>
+    </div>
+
+    <div id="list"></div>
+    <div id="load-more-container" class="load-more-area" style="display:none;">
+        <button class="btn btn-primary" onclick="loadMore()" style="width:80%;">さらに表示する</button>
+    </div>
 </div>
 
 <script>
-const GAS_URL = "ここにあなたのGASのURL"; 
+const GAS_URL = "https://script.google.com/macros/s/AKfycbz9Io-YZwOWxwzotMvkHYYTPHUosJ_ZQIEP8Nqze1taq2XwxZY5tPaGZ-iL_z92hGhTeA/exec"; 
 let items = [], displayLimit = 30, pieChart = null, lineChart = null;
 
+// データ読み込み
 async function loadData() {
-    document.getElementById('sync-status').innerText = "⏳ 読み込み中...";
+    document.getElementById('sync-status').innerText = "⏳ 同期中...";
     try {
         const res = await fetch(`${GAS_URL}?t=${Date.now()}`);
         items = await res.json();
         updateUI();
-    } catch(e){ document.getElementById('sync-status').innerText = "❌ エラー"; }
+    } catch(e){ 
+        document.getElementById('sync-status').innerText = "❌ 接続エラー"; 
+    }
 }
 
 function updateUI() {
@@ -95,125 +99,190 @@ function updateUI() {
     render(true);
 }
 
+// 保存・更新
 async function saveItem(){
-    const title=document.getElementById('title').value.trim();
-    if(!title) return alert("タイトル必須");
-    const saveBtn=document.getElementById('main-save-btn');
-    saveBtn.disabled=true;
+    const title = document.getElementById('title').value.trim();
+    if(!title) return alert("タイトルを入力してください");
     
-    const item={
-        type:document.getElementById('type').value, title:title,
-        creator:document.getElementById('creator').value, code:document.getElementById('code').value,
-        price:parseInt(document.getElementById('price').value)||0, shop:document.getElementById('shop').value,
-        location:document.getElementById('location').value, condition:document.getElementById('condition').value,
-        date:document.getElementById('date').value||new Date().toISOString().split('T')[0],
-        img:document.getElementById('img-url').value
+    const saveBtn = document.getElementById('main-save-btn');
+    saveBtn.disabled = true;
+    saveBtn.innerText = "⏳ 保存中...";
+    
+    const item = {
+        type: document.getElementById('type').value,
+        title: title,
+        creator: document.getElementById('creator').value,
+        code: document.getElementById('code').value,
+        price: parseInt(document.getElementById('price').value) || 0,
+        shop: document.getElementById('shop').value,
+        location: document.getElementById('location').value,
+        condition: document.getElementById('condition').value,
+        date: document.getElementById('date').value || new Date().toISOString().split('T')[0],
+        img: document.getElementById('img-url').value
     };
 
     let tempItems = [...items];
     const editIdx = parseInt(document.getElementById('edit-index').value);
-    if(editIdx === -1) tempItems.unshift(item);
-    else tempItems[editIdx] = item;
+    
+    if(editIdx === -1) {
+        tempItems.unshift(item); // 新規は先頭に追加
+    } else {
+        tempItems[editIdx] = item; // 編集
+    }
 
     try {
         const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(tempItems) });
-        if(res.ok) { items = tempItems; updateUI(); resetForm(); alert("保存完了"); }
-    } catch(e) { alert("失敗"); }
-    saveBtn.disabled=false;
+        if(res.ok) {
+            items = tempItems;
+            updateUI();
+            resetForm();
+            alert("クラウドに保存しました");
+        }
+    } catch(e) {
+        alert("保存に失敗しました");
+    }
+    saveBtn.disabled = false;
 }
 
-function render(reset=false){
+// リスト表示
+function render(reset = false){
     if(reset) displayLimit = 30;
-    const list=document.getElementById('list');
-    const query=document.getElementById('search').value.toLowerCase();
-    list.innerHTML='';
-    const filtered = items.filter(i => (i.title+(i.creator||"")).toLowerCase().includes(query));
+    const list = document.getElementById('list');
+    const query = document.getElementById('search').value.toLowerCase();
+    list.innerHTML = '';
     
-    filtered.slice(0, displayLimit).forEach((item, idx) => {
+    const filtered = items.filter(i => (i.title + (i.creator || "")).toLowerCase().includes(query));
+    
+    filtered.slice(0, displayLimit).forEach((item) => {
         const originalIndex = items.indexOf(item);
-        const card=document.createElement('div');
-        card.className='item-card';
-        card.innerHTML=`
-        <img src="${item.img||'https://via.placeholder.com/100?text=No+Img'}" class="item-img">
-        <div class="item-main">
-            <div><span class="tag" style="background:#3498db">${item.type}</span></div>
-            <div class="item-title">${item.title}</div>
-            <div style="font-size:0.8em; color:#666;">👤 ${item.creator||'-'} | 💰 ${item.price}円</div>
-        </div>
-        <button class="btn-action" onclick="editItem(${originalIndex})">📝</button>
-        <button class="btn-action" style="color:var(--error)" onclick="deleteItem(${originalIndex})">🗑️</button>`;
+        const card = document.createElement('div');
+        card.className = 'item-card';
+        card.innerHTML = `
+            <img src="${item.img || 'https://via.placeholder.com/100?text=No+Img'}" class="item-img">
+            <div class="item-main">
+                <div><span class="tag" style="background:${item.type==='record'?'#e67e22':item.type==='cd'?'#9b59b6':'#3498db'}">${item.type}</span></div>
+                <div class="item-title">${item.title}</div>
+                <div style="font-size:0.8em; color:#666;">👤 ${item.creator || '-'} | 📍 ${item.location || '-'}</div>
+            </div>
+            <button class="btn-action" onclick="editItem(${originalIndex})">📝</button>
+            <button class="btn-action" style="color:var(--error)" onclick="deleteItem(${originalIndex})">🗑️</button>
+        `;
         list.appendChild(card);
     });
-    document.getElementById('load-more-container').style.display = filtered.length > displayLimit ? 'block' : 'none';
+
+    const loadMoreBtn = document.getElementById('load-more-container');
+    loadMoreBtn.style.display = filtered.length > displayLimit ? 'block' : 'none';
+    
     updateCharts();
 }
 
-function loadMore() { displayLimit += 30; render(); }
-
-function editItem(idx){
-    const i=items[idx];
-    document.getElementById('type').value=i.type;
-    document.getElementById('title').value=i.title;
-    document.getElementById('creator').value=i.creator;
-    document.getElementById('code').value=i.code;
-    document.getElementById('price').value=i.price;
-    document.getElementById('shop').value=i.shop;
-    document.getElementById('location').value=i.location;
-    document.getElementById('condition').value=i.condition;
-    document.getElementById('date').value=i.date ? i.date.toString().replace(/\//g, '-') : "";
-    document.getElementById('edit-index').value=idx;
-    document.getElementById('main-save-btn').innerText="修正を保存する";
-    document.getElementById('cancel-btn').style.display="block";
-    window.scrollTo({top:0, behavior:'smooth'});
+function loadMore() {
+    displayLimit += 30;
+    render();
 }
 
+// 編集モード
+function editItem(idx){
+    const i = items[idx];
+    document.getElementById('type').value = i.type;
+    document.getElementById('title').value = i.title;
+    document.getElementById('creator').value = i.creator;
+    document.getElementById('code').value = i.code;
+    document.getElementById('price').value = i.price;
+    document.getElementById('shop').value = i.shop;
+    document.getElementById('location').value = i.location;
+    document.getElementById('condition').value = i.condition;
+    
+    // 日付形式の補正
+    let d = i.date ? i.date.toString().replace(/\//g, '-') : "";
+    if(d.length > 10) d = d.substring(0, 10);
+    document.getElementById('date').value = d;
+
+    document.getElementById('edit-index').value = idx;
+    document.getElementById('main-save-btn').innerText = "修正を保存する";
+    document.getElementById('cancel-btn').style.display = "block";
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// 削除
 async function deleteItem(idx){
-    if(!confirm("削除しますか？")) return;
+    if(!confirm("このデータを削除してもよろしいですか？")) return;
     let tempItems = [...items];
-    tempItems.splice(idx,1);
-    const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(tempItems) });
-    if(res.ok) { items = tempItems; updateUI(); }
+    tempItems.splice(idx, 1);
+    
+    document.getElementById('sync-status').innerText = "⏳ 削除中...";
+    try {
+        const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(tempItems) });
+        if(res.ok) {
+            items = tempItems;
+            updateUI();
+        }
+    } catch(e) { alert("削除に失敗しました"); }
 }
 
 function resetForm(){
-    document.getElementById('edit-index').value="-1";
-    document.getElementById('title').value="";
-    document.getElementById('main-save-btn').innerText="クラウドに保存して同期";
-    document.getElementById('cancel-btn').style.display="none";
+    document.getElementById('edit-index').value = "-1";
+    document.getElementById('title').value = "";
+    document.getElementById('creator').value = "";
+    document.getElementById('main-save-btn').innerText = "クラウドに保存して同期";
+    document.getElementById('cancel-btn').style.display = "none";
 }
 
+// グラフ
 function updateCharts() {
-    let counts = {book:0, cd:0, record:0};
-    let spend = {};
+    let counts = {book:0, cd:0, record:0, other:0};
+    let monthlySpend = {};
+    
     items.forEach(i => {
-        counts[i.type] = (counts[i.type]||0) + 1;
-        let m = (i.date||"").toString().substring(0,7).replace(/\//g,'-');
-        if(m.match(/^\d{4}-\d{2}$/)) spend[m] = (spend[m]||0) + (parseInt(i.price)||0);
+        counts[i.type || 'other']++;
+        let d = i.date ? i.date.toString().replace(/\//g, '-') : "";
+        let m = d.substring(0, 7);
+        if(m.match(/^\d{4}-\d{2}$/)) {
+            monthlySpend[m] = (monthlySpend[m] || 0) + (parseInt(i.price) || 0);
+        }
     });
+
     if(pieChart) pieChart.destroy();
     pieChart = new Chart(document.getElementById('pieChart'), {
-        type:'doughnut', data:{labels:['本','CD','レコード'], datasets:[{data:[counts.book, counts.cd, counts.record], backgroundColor:['#3498db','#9b59b6','#e67e22']}]}
+        type: 'doughnut',
+        data: {
+            labels: ['本', 'CD', 'レコード'],
+            datasets: [{ data: [counts.book, counts.cd, counts.record], backgroundColor: ['#3498db', '#9b59b6', '#e67e22'] }]
+        },
+        options: { maintainAspectRatio: false, plugins: { title: { display: true, text: '種類別内訳' } } }
     });
+
     if(lineChart) lineChart.destroy();
-    const months = Object.keys(spend).sort().slice(-6);
+    const sortedMonths = Object.keys(monthlySpend).sort().slice(-6);
     lineChart = new Chart(document.getElementById('lineChart'), {
-        type:'line', data:{labels:months, datasets:[{label:'支出', data:months.map(m=>spend[m]), borderColor:'#27ae60'}]}
+        type: 'line',
+        data: {
+            labels: sortedMonths,
+            datasets: [{ label: '月別支出(円)', data: sortedMonths.map(m => monthlySpend[m]), borderColor: '#27ae60', tension: 0.3, fill: true, backgroundColor: 'rgba(39, 174, 96, 0.1)' }]
+        },
+        options: { maintainAspectRatio: false, plugins: { title: { display: true, text: '最近の支出推移' } } }
     });
 }
 
-function sortData(k,o){
-    items.sort((a,b)=>o==='asc'?(a[k]||"").toString().localeCompare((b[k]||"").toString()):(b[k]||"").toString().localeCompare((a[k]||"").toString()));
+function sortData(k, o){
+    items.sort((a,b) => o === 'asc' ? 
+        (a[k]||"").toString().localeCompare((b[k]||"").toString()) : 
+        (b[k]||"").toString().localeCompare((a[k]||"").toString())
+    );
     render(true);
 }
 
 function exportCSV(){
-    let csv = "\uFEFF種別,タイトル,作者,コード,価格,店,場所,状態,日付\n" + items.map(i=>`"${i.type}","${i.title}","${i.creator}","${i.code}","${i.price}","${i.shop}","${i.location}","${i.condition}","${i.date}"`).join("\n");
+    let csv = "\uFEFF種別,タイトル,作者,コード,価格,店,場所,状態,日付\n" + 
+        items.map(i => `"${i.type}","${i.title}","${i.creator}","${i.code}","${i.price}","${i.shop}","${i.location}","${i.condition}","${i.date}"`).join("\n");
     const link = document.createElement("a");
-    link.href = URL.createObjectURL(new Blob([csv], {type:"text/csv"}));
-    link.download = "backup.csv"; link.click();
+    link.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
+    link.download = "collection_backup.csv";
+    link.click();
 }
 
-document.getElementById('date').value=new Date().toISOString().split('T')[0];
+// 初期化
+document.getElementById('date').value = new Date().toISOString().split('T')[0];
 loadData();
 </script>
 </body>
