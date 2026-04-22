@@ -35,14 +35,11 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
     <header style="text-align:center; margin-bottom:15px;">
         <h1 style="color:var(--primary); margin:0; font-size: 1.6em;">My Collection Dashboard</h1>
     </header>
-
     <div id="sync-status" class="sync-status">⏳ 接続中...</div>
-
     <div class="dashboard">
         <div class="card"><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
         <div class="card"><div class="chart-container"><canvas id="lineChart"></canvas></div></div>
     </div>
-
     <div class="form-section">
         <div id="registration-form">
             <div class="form-grid">
@@ -61,7 +58,6 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
             <button id="cancel-btn" class="btn btn-ghost" onclick="resetForm()" style="width:100%; margin-top:8px; display:none;">キャンセルして新規入力に戻る</button>
         </div>
     </div>
-
     <div style="background:#fff; padding:12px; border-radius:12px; margin-bottom:20px; border:1px solid #eee;">
         <input type="text" id="search" placeholder="コレクションを検索..." style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
         <div style="display:flex; gap:8px;">
@@ -70,7 +66,6 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
             <button class="btn btn-primary" onclick="exportCSV()" style="margin-left:auto;">📥 CSV保存</button>
         </div>
     </div>
-
     <div id="list"></div>
     <div id="load-more-container" style="text-align:center; padding:20px; display:none;">
         <button class="btn btn-primary" onclick="loadMore()" style="width:80%;">さらに表示する</button>
@@ -170,19 +165,40 @@ function resetForm(){
     document.getElementById('cancel-btn').style.display = "none";
 }
 
+// 【超強化版】収支グラフ表示ロジック
 function updateCharts() {
     let counts = {book:0, cd:0, record:0, other:0};
     let monthlySpend = {};
     
     items.forEach(i => {
+        // 種類別カウント
         counts[i.type || 'other']++;
-        let d = (i.date || "").toString().replace(/\//g, '-');
-        let m = d.substring(0, 7);
+        
+        // 金額のクリーニング（カンマなどを除去して数値化）
+        let price = String(i.price || "0").replace(/[^0-9]/g, "");
+        let numPrice = parseInt(price) || 0;
+        
+        // 日付のクリーニングと年月抽出
+        let rawDate = (i.date || "").toString();
+        let m = "";
+        
+        if (rawDate.includes("-")) {
+            m = rawDate.substring(0, 7); // 2026-04
+        } else if (rawDate.includes("/")) {
+            let parts = rawDate.split("/");
+            if (parts.length >= 2) {
+                let y = parts[0];
+                let mon = parts[1].padStart(2, '0');
+                m = `${y}-${mon}`;
+            }
+        }
+        
         if(m && m.match(/^\d{4}-\d{2}$/)) {
-            monthlySpend[m] = (monthlySpend[m] || 0) + (Number(i.price) || 0);
+            monthlySpend[m] = (monthlySpend[m] || 0) + numPrice;
         }
     });
 
+    // 円グラフ
     if(pieChart) pieChart.destroy();
     pieChart = new Chart(document.getElementById('pieChart'), {
         type: 'doughnut',
@@ -190,15 +206,36 @@ function updateCharts() {
         options: { maintainAspectRatio: false, plugins: { title: { display: true, text: '種類別内訳' } } }
     });
 
+    // 折れ線グラフ（全期間）
     if(lineChart) lineChart.destroy();
-    const sortedMonths = Object.keys(monthlySpend).sort(); // 全期間表示
+    const sortedMonths = Object.keys(monthlySpend).sort();
+    
+    // データが1ヶ月分しかない場合でも点として表示されるよう設定
     lineChart = new Chart(document.getElementById('lineChart'), {
         type: 'line',
         data: {
             labels: sortedMonths,
-            datasets: [{ label: '購入総額(円)', data: sortedMonths.map(m => monthlySpend[m]), borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3 }]
+            datasets: [{ 
+                label: '購入総額(円)', 
+                data: sortedMonths.map(m => monthlySpend[m]), 
+                borderColor: '#27ae60', 
+                backgroundColor: 'rgba(39, 174, 96, 0.2)', 
+                fill: true, 
+                tension: 0.1,
+                pointRadius: 5,
+                pointBackgroundColor: '#27ae60'
+            }]
         },
-        options: { maintainAspectRatio: false, plugins: { title: { display: true, text: '月別支出推移（全期間）' } } }
+        options: { 
+            maintainAspectRatio: false, 
+            plugins: { 
+                title: { display: true, text: '月別支出推移（全期間）' },
+                legend: { display: true }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { callback: value => value.toLocaleString() + '円' } }
+            }
+        }
     });
 }
 
