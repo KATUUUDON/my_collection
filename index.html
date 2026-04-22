@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Collection Master PRO - Rich Layout</title>
+<title>Collection Master PRO - High Visibility</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e74c3c; --bg: #f4f7f6; }
@@ -15,37 +15,47 @@ body { font-family: sans-serif; background: var(--bg); padding: 10px; color: #33
 .chart-container { flex-grow: 1; width: 100%; position: relative; min-height: 0; }
 .form-section { background: #edf2f7; padding: 15px; border-radius: 15px; margin-bottom: 20px; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
-input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 16px; }
+input, select { padding: 14px; border: 1px solid #cbd5e0; border-radius: 10px; width: 100%; box-sizing: border-box; font-size: 16px; }
 
-/* カードサイズをUPし、ゆとりを持たせたレイアウト */
+/* --- 1.3倍ボリュームアップ・レイアウト --- */
 .item-card { 
     display: flex; 
     align-items: center; 
-    padding: 15px; /* 余白を増やしました */
+    padding: 20px; /* 余白をさらに拡大 */
     border-bottom: 1px solid #eee; 
     background: #fff;
-    min-height: 100px; /* 高さを確保 */
+    min-height: 130px; /* 高さをしっかり確保 */
 }
-.item-img { width: 75px; height: 75px; object-fit: cover; border-radius: 8px; margin-right: 15px; background: #eee; flex-shrink: 0; }
+.item-img { width: 90px; height: 90px; object-fit: cover; border-radius: 10px; margin-right: 18px; background: #eee; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 .item-main { flex-grow: 1; min-width: 0; padding-right: 10px; }
-.item-title { font-weight: bold; font-size: 1.05rem; margin-bottom: 4px; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.item-details { font-size: 0.85rem; color: #555; line-height: 1.6; } /* 行間を広げて読みやすく */
-.tag { font-size: 0.75em; padding: 2px 6px; border-radius: 4px; color: white; margin-right: 5px; font-weight: bold; vertical-align: middle; }
-.id-highlight { color: #888; font-family: monospace; background: #f0f0f0; padding: 1px 4px; border-radius: 3px; }
-.date-highlight { color: var(--accent); font-weight: bold; }
 
-.btn { padding: 12px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-.btn-success { background: var(--success); color: white; width: 100%; margin-top: 10px; font-size: 1.1em; }
-.btn-ghost { background: #e2e8f0; color: #4a5568; font-size: 0.85em; }
-.btn-action-group { display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
-.btn-action { background: none; border: none; font-size: 1.5em; cursor: pointer; padding: 5px; }
-.sync-status { text-align: right; font-size: 0.75em; color: #666; margin-bottom: 5px; }
+/* タイトルの強調表示 */
+.item-title { 
+    font-weight: 900; /* 極太 */
+    font-size: 1.3rem; /* 1.3倍サイズ */
+    margin-bottom: 6px; 
+    color: #000; 
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* 2行まで表示 */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.item-details { font-size: 0.95rem; color: #444; line-height: 1.7; } 
+.tag { font-size: 0.8em; padding: 3px 8px; border-radius: 5px; color: white; margin-right: 6px; font-weight: bold; vertical-align: middle; }
+.id-highlight { color: #2c3e50; font-family: monospace; background: #eef2f7; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+.date-highlight { color: var(--accent); font-weight: bold; border-bottom: 1px solid var(--accent); }
+
+.btn-action-group { display: flex; flex-direction: column; gap: 15px; flex-shrink: 0; }
+.btn-action { background: none; border: none; font-size: 1.8em; cursor: pointer; padding: 5px; } /* アイコンも大きく */
+.sync-status { text-align: right; font-size: 0.8em; color: #666; margin-bottom: 5px; font-weight: bold; }
 </style>
 </head>
 <body>
 <div class="container">
     <header style="text-align:center; margin-bottom:15px;">
-        <h1 style="color:var(--primary); margin:0; font-size: 1.5em;">Collection PRO</h1>
+        <h1 style="color:var(--primary); margin:0; font-size: 1.6em;">Collection Master PRO</h1>
     </header>
 
     <div id="sync-status" class="sync-status">⏳ 読み込み中...</div>
@@ -60,7 +70,7 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
             <select id="type"><option value="book">📚 本</option><option value="cd">💿 CD</option><option value="record" selected>🎸 レコード</option></select>
             <input type="text" id="title" placeholder="タイトル（必須）">
             <input type="text" id="creator" placeholder="作者 / アーティスト">
-            <input type="text" id="code" placeholder="品番（識別コード）">
+            <input type="text" id="code" placeholder="品番">
             <input type="number" id="price" placeholder="価格（円）">
             <input type="text" id="shop" placeholder="購入店">
             <input type="text" id="location" placeholder="場所">
@@ -69,13 +79,13 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
             <input type="hidden" id="edit-index" value="-1">
             <input type="hidden" id="img-url">
         </div>
-        <button id="main-save-btn" class="btn btn-success" onclick="saveItem()">保存して同期</button>
-        <button id="cancel-btn" class="btn btn-ghost" onclick="resetForm()" style="width:100%; margin-top:5px; display:none;">キャンセル</button>
+        <button id="main-save-btn" style="background: var(--success); color: white; width: 100%; margin-top: 15px; font-size: 1.1em; padding:15px; border:none; border-radius:10px; font-weight:bold;" onclick="saveItem()">保存して同期</button>
+        <button id="cancel-btn" style="background: #e2e8f0; color: #4a5568; width:100%; margin-top:8px; display:none; padding:10px; border:none; border-radius:8px;" onclick="resetForm()">キャンセル</button>
     </div>
 
-    <div id="list" style="margin-top: 10px; border-top: 1px solid #eee;"></div>
-    <div id="load-more-container" style="text-align:center; padding:20px; display:none;">
-        <button class="btn btn-primary" onclick="loadMore()" style="width:80%;">さらに表示</button>
+    <div id="list" style="margin-top: 10px; border-top: 2px solid #eee;"></div>
+    <div id="load-more-container" style="text-align:center; padding:30px; display:none;">
+        <button style="background: var(--accent); color: white; padding: 15px 40px; border: none; border-radius: 30px; font-weight: bold; font-size: 1.1em;" onclick="loadMore()">さらに表示する</button>
     </div>
 </div>
 
@@ -123,9 +133,8 @@ function render(reset = false){
         const originalIndex = items.indexOf(item);
         const card = document.createElement('div');
         card.className = 'item-card';
-        // 品番(ID)を復活させ、サイズにゆとりを持たせた表示
         card.innerHTML = `
-            <img src="${item.img || 'https://via.placeholder.com/100?text=No+Img'}" class="item-img">
+            <img src="${item.img || 'https://via.placeholder.com/150?text=No+Image'}" class="item-img">
             <div class="item-main">
                 <div class="item-title"><span class="tag" style="background:${item.type==='record'?'#e67e22':item.type==='cd'?'#9b59b6':'#3498db'}">${item.type}</span>${item.title}</div>
                 <div class="item-details">
