@@ -3,33 +3,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Collection Master PRO - Final Gold</title>
+<title>Collection Master PRO - Perfect Edition</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e74c3c; --bg: #f4f7f6; }
 body { font-family: sans-serif; background: var(--bg); padding: 5px; color: #333; margin: 0; }
 .container { max-width: 100%; margin: auto; background: white; padding: 12px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
 
-/* グラフエリアの調整：円グラフを小さく見せるため高さを少し抑える */
+/* ダッシュボード：円グラフのはみ出しを防ぐため高さを調整 */
 .dashboard { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 @media (min-width: 768px) { .dashboard { display: grid; grid-template-columns: 1fr 1fr; } }
-.card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 12px; height: 280px; display: flex; flex-direction: column; align-items: center; }
-.chart-container { width: 90%; height: 90%; position: relative; } /* サイズを2割ほど余裕を持たせる */
+.card { background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 12px; height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.chart-container { width: 85%; height: 85%; position: relative; } /* 2割ほど余裕を持たせてはみ出し防止 */
 
+/* フォームと検索窓 */
 .form-section { background: #edf2f7; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
 input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 16px; width: 100%; box-sizing: border-box; }
 
-.item-card { display: flex; align-items: flex-start; padding: 15px 10px; border-bottom: 1px solid #f0f0f0; background: #fff; width: 100%; box-sizing: border-box; }
-.item-img { width: 90px; height: 90px; object-fit: cover; border-radius: 8px; margin-right: 15px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.search-section { margin-bottom: 15px; }
+.search-input { 
+    width: 100%; 
+    padding: 15px; 
+    border: 2px solid var(--accent); 
+    border-radius: 30px; 
+    font-size: 1.1em; 
+    box-sizing: border-box;
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.2);
+}
+
+/* アイテムカード：1.3倍サイズ＆横幅フル活用 */
+.item-card { 
+    display: flex; 
+    align-items: flex-start; 
+    padding: 18px 10px; 
+    border-bottom: 1px solid #f0f0f0; 
+    background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+}
+.item-img { 
+    width: 95px; 
+    height: 95px; 
+    object-fit: cover; 
+    border-radius: 10px; 
+    margin-right: 15px; 
+    flex-shrink: 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
 .item-main { flex: 1; min-width: 0; }
-.item-title { font-weight: 900; font-size: 1.25rem; color: #1a202c; line-height: 1.3; margin-bottom: 5px; word-wrap: break-word; }
-.item-details { font-size: 0.9rem; color: #4a5568; line-height: 1.6; }
-.tag { display: inline-block; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; color: white; margin-right: 6px; font-weight: bold; margin-bottom: 3px; }
-.id-label { background: #e2e8f0; padding: 1px 5px; border-radius: 4px; font-family: monospace; font-weight: bold; }
+
+.item-title { 
+    font-weight: 900; 
+    font-size: 1.3rem; /* 1.3倍 */
+    color: #1a202c; 
+    line-height: 1.3;
+    margin-bottom: 6px;
+    word-wrap: break-word;
+}
+.item-details { font-size: 0.95rem; color: #4a5568; line-height: 1.6; }
+.tag { font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; color: white; margin-right: 6px; font-weight: bold; }
+.id-label { background: #e2e8f0; padding: 2px 5px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #2c3e50; }
 .date-label { color: var(--accent); font-weight: bold; }
-.btn-action-group { display: flex; flex-direction: column; gap: 12px; margin-left: 10px; padding-top: 5px; flex-shrink: 0; }
-.btn-action { background: none; border: none; font-size: 1.6rem; cursor: pointer; padding: 2px; }
+
+.btn-action-group { display: flex; flex-direction: column; gap: 15px; margin-left: 10px; flex-shrink: 0; }
+.btn-action { background: none; border: none; font-size: 1.7rem; cursor: pointer; padding: 2px; }
+
 .sync-status { text-align: right; font-size: 0.8rem; color: #718096; margin-bottom: 5px; }
 </style>
 </head>
@@ -38,16 +77,12 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; fo
     <div id="sync-status" class="sync-status">⏳ 接続中...</div>
 
     <div class="dashboard">
-        <div class="card">
-            <div class="chart-container" style="padding: 10px;">
-                <canvas id="pieChart"></canvas>
-            </div>
-        </div>
-        <div class="card">
-            <div class="chart-container">
-                <canvas id="lineChart"></canvas>
-            </div>
-        </div>
+        <div class="card"><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
+        <div class="card"><div class="chart-container"><canvas id="lineChart"></canvas></div></div>
+    </div>
+
+    <div class="search-section">
+        <input type="text" id="search" class="search-input" placeholder="🔍 タイトル、作者、品番で検索..." oninput="render(true)">
     </div>
 
     <div class="form-section">
@@ -57,12 +92,12 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; fo
             <input type="text" id="creator" placeholder="作者">
             <input type="text" id="code" placeholder="品番">
             <input type="number" id="price" placeholder="価格（円）">
-            <input type="text" id="shop" placeholder="店">
-            <input type="text" id="location" placeholder="場所">
+            <input type="text" id="shop" placeholder="購入店">
+            <input type="text" id="location" placeholder="保管場所">
             <input type="date" id="date">
             <input type="hidden" id="edit-index" value="-1"><input type="hidden" id="img-url">
         </div>
-        <button id="main-save-btn" style="background: var(--success); color: white; width: 100%; margin-top: 10px; font-size: 1.1em; padding:14px; border:none; border-radius:10px; font-weight:bold;" onclick="saveItem()">保存して同期</button>
+        <button id="main-save-btn" style="background: var(--success); color: white; width: 100%; margin-top: 10px; font-size: 1.1em; padding:14px; border:none; border-radius:10px; font-weight:bold;" onclick="saveItem()">クラウドに保存して同期</button>
         <button id="cancel-btn" style="background: #cbd5e0; width:100%; margin-top:5px; display:none; padding:10px; border:none; border-radius:8px;" onclick="resetForm()">キャンセル</button>
     </div>
 
@@ -73,6 +108,7 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; fo
 </div>
 
 <script>
+// ここにご自身のGASのURLを貼り付けてください
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz9Io-YZwOWxwzotMvkHYYTPHUosJ_ZQIEP8Nqze1taq2XwxZY5tPaGZ-iL_z92hGhTeA/exec"; 
 let items = [], displayLimit = 30, pieChart = null, lineChart = null;
 
@@ -111,8 +147,15 @@ async function saveItem(){
 function render(reset = false){
     if(reset) displayLimit = 30;
     const list = document.getElementById('list');
+    const query = document.getElementById('search').value.toLowerCase();
     list.innerHTML = '';
-    items.slice(0, displayLimit).forEach((item, idx) => {
+    
+    // 検索フィルタ（タイトル、作者、品番のすべてから探せるように強化）
+    const filtered = items.filter(i => 
+        (String(i.title) + String(i.creator || "") + String(i.code || "")).toLowerCase().includes(query)
+    );
+    
+    filtered.slice(0, displayLimit).forEach((item) => {
         const originalIndex = items.indexOf(item);
         const card = document.createElement('div');
         card.className = 'item-card';
@@ -134,14 +177,14 @@ function render(reset = false){
         `;
         list.appendChild(card);
     });
-    document.getElementById('load-more-container').style.display = items.length > displayLimit ? 'block' : 'none';
+    document.getElementById('load-more-container').style.display = filtered.length > displayLimit ? 'block' : 'none';
     updateCharts();
 }
 
 function loadMore() { displayLimit += 30; render(); }
 
 async function deleteItem(idx){
-    if(!confirm("削除しますか？")) return;
+    if(!confirm("このアイテムを削除しますか？")) return;
     items.splice(idx, 1);
     await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(items) });
     updateUI();
@@ -166,86 +209,39 @@ function editItem(idx){
 function resetForm(){
     document.getElementById('edit-index').value = "-1";
     document.getElementById('title').value = "";
-    document.getElementById('main-save-btn').innerText = "保存して同期";
+    document.getElementById('main-save-btn').innerText = "クラウドに保存して同期";
     document.getElementById('cancel-btn').style.display = "none";
 }
 
-// グラフ修正：データの集計ロジック
 function updateCharts() {
     let counts = {book:0, cd:0, record:0, other:0};
     let monthlySpend = {};
-
     items.forEach(i => {
-        // 円グラフ用
         counts[i.type || 'other']++;
-        
-        // 収支グラフ用 (E列=価格, H列=日付)
         let p = parseInt(String(i.price).replace(/[^0-9]/g, "")) || 0;
-        
-        // 日付の正規化 (2026/03/26 形式に対応)
-        let dateStr = String(i.date || "");
-        let yearMonth = "";
-        
-        // 日付からYYYY-MMを抽出
-        let match = dateStr.match(/(\d{4})[/-](\d{1,2})/);
+        let match = String(i.date || "").match(/(\d{4})[/-](\d{1,2})/);
         if (match) {
-            yearMonth = match[1] + "-" + match[2].padStart(2, '0');
-        }
-
-        if (yearMonth) {
-            monthlySpend[yearMonth] = (monthlySpend[yearMonth] || 0) + p;
+            let m = match[1] + "-" + match[2].padStart(2, '0');
+            monthlySpend[m] = (monthlySpend[m] || 0) + p;
         }
     });
-
-    // 円グラフの作成（はみ出し防止のためサイズ調整オプション追加）
+    
     if(pieChart) pieChart.destroy();
     pieChart = new Chart(document.getElementById('pieChart'), {
         type: 'doughnut',
-        data: { 
-            labels: ['本', 'CD', 'レコード'], 
-            datasets: [{ 
-                data: [counts.book, counts.cd, counts.record], 
-                backgroundColor: ['#3498db', '#9b59b6', '#e67e22'] 
-            }] 
-        },
-        options: { 
-            maintainAspectRatio: false,
-            layout: { padding: 10 }, // ここで内側に余白を作りはみ出しを防ぐ
-            plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
-            }
-        }
+        data: { labels: ['本', 'CD', 'レコード'], datasets: [{ data: [counts.book, counts.cd, counts.record], backgroundColor: ['#3498db', '#9b59b6', '#e67e22'] }] },
+        options: { maintainAspectRatio: false, layout: { padding: 10 } }
     });
-
-    // 収支グラフの作成
-    if(lineChart) lineChart.destroy();
-    const sortedMonths = Object.keys(monthlySpend).sort(); // 月順に並び替え
     
+    if(lineChart) lineChart.destroy();
+    const sortedMonths = Object.keys(monthlySpend).sort();
     lineChart = new Chart(document.getElementById('lineChart'), {
         type: 'line',
         data: {
             labels: sortedMonths,
-            datasets: [{ 
-                label: '支出(円)', 
-                data: sortedMonths.map(m => monthlySpend[m]), 
-                borderColor: '#27ae60', 
-                backgroundColor: 'rgba(39, 174, 96, 0.1)',
-                fill: true, 
-                tension: 0.3,
-                pointRadius: 4
-            }]
+            datasets: [{ label: '月別支出', data: sortedMonths.map(m => monthlySpend[m]), borderColor: '#27ae60', fill: true, backgroundColor: 'rgba(39, 174, 96, 0.1)', tension: 0.3 }]
         },
-        options: { 
-            maintainAspectRatio: false,
-            plugins: { 
-                title: { display: true, text: '月別支出推移', font: { size: 12 } },
-                legend: { display: false }
-            },
-            scales: {
-                y: { beginAtZero: true, ticks: { font: { size: 10 } } },
-                x: { ticks: { font: { size: 10 } } }
-            }
-        }
+        options: { maintainAspectRatio: false, plugins: { title: { display: true, text: '収支推移' } } }
     });
 }
 
