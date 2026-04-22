@@ -3,64 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Collection Master PRO - Perfect Edition</title>
+<title>Collection Master PRO - Final Fix</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e74c3c; --bg: #f4f7f6; }
 body { font-family: sans-serif; background: var(--bg); padding: 5px; color: #333; margin: 0; }
 .container { max-width: 100%; margin: auto; background: white; padding: 12px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
 
-/* ダッシュボード：円グラフのはみ出しを防ぐため高さを調整 */
+/* ダッシュボード：グラフサイズ調整 */
 .dashboard { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 @media (min-width: 768px) { .dashboard { display: grid; grid-template-columns: 1fr 1fr; } }
 .card { background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 12px; height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.chart-container { width: 85%; height: 85%; position: relative; } /* 2割ほど余裕を持たせてはみ出し防止 */
+.chart-container { width: 85%; height: 85%; position: relative; }
 
-/* フォームと検索窓 */
+/* 検索窓 */
+.search-section { margin: 10px 0 20px; }
+.search-input { width: 100%; padding: 15px; border: 2px solid var(--accent); border-radius: 30px; font-size: 1.1em; box-sizing: border-box; outline: none; }
+
+/* フォーム */
 .form-section { background: #edf2f7; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
 input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 16px; width: 100%; box-sizing: border-box; }
 
-.search-section { margin-bottom: 15px; }
-.search-input { 
-    width: 100%; 
-    padding: 15px; 
-    border: 2px solid var(--accent); 
-    border-radius: 30px; 
-    font-size: 1.1em; 
-    box-sizing: border-box;
-    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.2);
-}
-
-/* アイテムカード：1.3倍サイズ＆横幅フル活用 */
-.item-card { 
-    display: flex; 
-    align-items: flex-start; 
-    padding: 18px 10px; 
-    border-bottom: 1px solid #f0f0f0; 
-    background: #fff;
-    width: 100%;
-    box-sizing: border-box;
-}
-.item-img { 
-    width: 95px; 
-    height: 95px; 
-    object-fit: cover; 
-    border-radius: 10px; 
-    margin-right: 15px; 
-    flex-shrink: 0;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
+/* アイテムカード */
+.item-card { display: flex; align-items: flex-start; padding: 18px 10px; border-bottom: 1px solid #f0f0f0; background: #fff; width: 100%; box-sizing: border-box; }
+.item-img { width: 95px; height: 95px; object-fit: cover; border-radius: 10px; margin-right: 15px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 .item-main { flex: 1; min-width: 0; }
-
-.item-title { 
-    font-weight: 900; 
-    font-size: 1.3rem; /* 1.3倍 */
-    color: #1a202c; 
-    line-height: 1.3;
-    margin-bottom: 6px;
-    word-wrap: break-word;
-}
+.item-title { font-weight: 900; font-size: 1.3rem; color: #1a202c; line-height: 1.3; margin-bottom: 6px; }
 .item-details { font-size: 0.95rem; color: #4a5568; line-height: 1.6; }
 .tag { font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; color: white; margin-right: 6px; font-weight: bold; }
 .id-label { background: #e2e8f0; padding: 2px 5px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #2c3e50; }
@@ -68,7 +37,6 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; fo
 
 .btn-action-group { display: flex; flex-direction: column; gap: 15px; margin-left: 10px; flex-shrink: 0; }
 .btn-action { background: none; border: none; font-size: 1.7rem; cursor: pointer; padding: 2px; }
-
 .sync-status { text-align: right; font-size: 0.8rem; color: #718096; margin-bottom: 5px; }
 </style>
 </head>
@@ -88,16 +56,16 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; fo
     <div class="form-section">
         <div class="form-grid">
             <select id="type"><option value="book">📚 本</option><option value="cd">💿 CD</option><option value="record" selected>🎸 レコード</option></select>
-            <input type="text" id="title" placeholder="タイトル（必須）">
+            <input type="text" id="title" placeholder="タイトル">
             <input type="text" id="creator" placeholder="作者">
             <input type="text" id="code" placeholder="品番">
-            <input type="number" id="price" placeholder="価格（円）">
+            <input type="number" id="price" placeholder="価格">
             <input type="text" id="shop" placeholder="購入店">
             <input type="text" id="location" placeholder="保管場所">
             <input type="date" id="date">
             <input type="hidden" id="edit-index" value="-1"><input type="hidden" id="img-url">
         </div>
-        <button id="main-save-btn" style="background: var(--success); color: white; width: 100%; margin-top: 10px; font-size: 1.1em; padding:14px; border:none; border-radius:10px; font-weight:bold;" onclick="saveItem()">クラウドに保存して同期</button>
+        <button id="main-save-btn" style="background: var(--success); color: white; width: 100%; margin-top: 10px; font-size: 1.1em; padding:14px; border:none; border-radius:10px; font-weight:bold;" onclick="saveItem()">保存して同期</button>
         <button id="cancel-btn" style="background: #cbd5e0; width:100%; margin-top:5px; display:none; padding:10px; border:none; border-radius:8px;" onclick="resetForm()">キャンセル</button>
     </div>
 
@@ -108,9 +76,19 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; fo
 </div>
 
 <script>
-// ここにご自身のGASのURLを貼り付けてください
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz9Io-YZwOWxwzotMvkHYYTPHUosJ_ZQIEP8Nqze1taq2XwxZY5tPaGZ-iL_z92hGhTeA/exec"; 
 let items = [], displayLimit = 30, pieChart = null, lineChart = null;
+
+// 日付を「YYYY/MM/DD」形式にする関数
+function formatDate(dateInput) {
+    if (!dateInput) return "---";
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return String(dateInput).substring(0, 10);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}/${m}/${day}`;
+}
 
 async function loadData() {
     try {
@@ -134,7 +112,7 @@ async function saveItem(){
         price: parseInt(document.getElementById('price').value) || 0, shop: document.getElementById('shop').value,
         location: document.getElementById('location').value, 
         date: document.getElementById('date').value || new Date().toISOString().split('T')[0],
-        condition: "中古", img: document.getElementById('img-url').value
+        img: document.getElementById('img-url').value
     };
     let tempItems = [...items];
     const editIdx = parseInt(document.getElementById('edit-index').value);
@@ -150,7 +128,6 @@ function render(reset = false){
     const query = document.getElementById('search').value.toLowerCase();
     list.innerHTML = '';
     
-    // 検索フィルタ（タイトル、作者、品番のすべてから探せるように強化）
     const filtered = items.filter(i => 
         (String(i.title) + String(i.creator || "") + String(i.code || "")).toLowerCase().includes(query)
     );
@@ -167,7 +144,7 @@ function render(reset = false){
                 <div class="item-details">
                     👤 ${item.creator || '---'}<br>
                     🆔 <span class="id-label">${item.code || '---'}</span><br>
-                    💰 ${Number(item.price).toLocaleString()}円 / <span class="date-label">📅 ${String(item.date).substring(0,10)}</span>
+                    💰 ${Number(item.price).toLocaleString()}円 / <span class="date-label">📅 ${formatDate(item.date)}</span>
                 </div>
             </div>
             <div class="btn-action-group">
@@ -184,7 +161,7 @@ function render(reset = false){
 function loadMore() { displayLimit += 30; render(); }
 
 async function deleteItem(idx){
-    if(!confirm("このアイテムを削除しますか？")) return;
+    if(!confirm("削除しますか？")) return;
     items.splice(idx, 1);
     await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(items) });
     updateUI();
@@ -199,7 +176,11 @@ function editItem(idx){
     document.getElementById('code').value = i.code;
     document.getElementById('shop').value = i.shop;
     document.getElementById('location').value = i.location;
-    document.getElementById('date').value = String(i.date).substring(0,10).replace(/\//g,'-');
+    // 編集時は input[type="date"] が解釈できる YYYY-MM-DD に変換
+    const d = new Date(i.date);
+    if(!isNaN(d.getTime())){
+        document.getElementById('date').value = d.toISOString().split('T')[0];
+    }
     document.getElementById('edit-index').value = idx;
     document.getElementById('main-save-btn').innerText = "修正を保存する";
     document.getElementById('cancel-btn').style.display = "block";
@@ -209,7 +190,7 @@ function editItem(idx){
 function resetForm(){
     document.getElementById('edit-index').value = "-1";
     document.getElementById('title').value = "";
-    document.getElementById('main-save-btn').innerText = "クラウドに保存して同期";
+    document.getElementById('main-save-btn').innerText = "保存して同期";
     document.getElementById('cancel-btn').style.display = "none";
 }
 
@@ -219,9 +200,9 @@ function updateCharts() {
     items.forEach(i => {
         counts[i.type || 'other']++;
         let p = parseInt(String(i.price).replace(/[^0-9]/g, "")) || 0;
-        let match = String(i.date || "").match(/(\d{4})[/-](\d{1,2})/);
-        if (match) {
-            let m = match[1] + "-" + match[2].padStart(2, '0');
+        let d = new Date(i.date);
+        if (!isNaN(d.getTime())) {
+            let m = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0');
             monthlySpend[m] = (monthlySpend[m] || 0) + p;
         }
     });
