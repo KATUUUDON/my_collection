@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Collection Master PRO - Perfect Match</title>
+<title>Collection Master PRO - Date Focus</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e74c3c; --bg: #f4f7f6; }
@@ -20,8 +20,9 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
 .item-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; margin-right: 12px; background: #eee; flex-shrink: 0; }
 .item-main { flex-grow: 1; min-width: 0; }
 .item-title { font-weight: bold; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
-.item-details { font-size: 0.8em; color: #666; line-height: 1.5; }
+.item-details { font-size: 0.85em; color: #555; line-height: 1.4; }
 .tag { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; color: white; margin-right: 5px; font-weight: bold; }
+.date-label { color: var(--accent); font-weight: bold; }
 .btn { padding: 12px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
 .btn-success { background: var(--success); color: white; width: 100%; margin-top: 15px; font-size: 1.1em; }
 .btn-ghost { background: #e2e8f0; color: #4a5568; font-size: 0.85em; }
@@ -35,7 +36,7 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
         <h1 style="color:var(--primary); margin:0; font-size: 1.6em;">My Collection Dashboard</h1>
     </header>
 
-    <div id="sync-status" class="sync-status">⏳ 接続中...</div>
+    <div id="sync-status" class="sync-status">⏳ 読み込み中...</div>
 
     <div class="dashboard">
         <div class="card"><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
@@ -50,19 +51,15 @@ input, select { padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; wi
                 <input type="text" id="creator" placeholder="作者 / アーティスト">
                 <input type="text" id="code" placeholder="品番">
                 <input type="number" id="price" placeholder="価格（円）">
-                <input type="text" id="shop" placeholder="購入店舗">
-                <input type="text" id="location" placeholder="保管場所">
+                <input type="text" id="shop" placeholder="購入店">
+                <input type="text" id="location" placeholder="場所">
                 <input type="date" id="date">
-                <select id="condition"><option value="中古">中古</option><option value="新品">新品</option></select>
+                <input type="hidden" id="condition" value="中古"> 
                 <input type="hidden" id="edit-index" value="-1"><input type="hidden" id="img-url">
             </div>
-            <button id="main-save-btn" class="btn btn-success" onclick="saveItem()">クラウドに保存して同期</button>
+            <button id="main-save-btn" class="btn btn-success" onclick="saveItem()">保存して同期</button>
             <button id="cancel-btn" class="btn btn-ghost" onclick="resetForm()" style="width:100%; margin-top:8px; display:none;">キャンセル</button>
         </div>
-    </div>
-
-    <div style="background:#fff; padding:10px; border-radius:12px; margin-bottom:20px; border:1px solid #eee;">
-        <input type="text" id="search" placeholder="コレクションを検索..." style="width:100%; padding:12px; border-radius:8px; border:1px solid #ddd;" oninput="render(true)">
     </div>
 
     <div id="list"></div>
@@ -88,11 +85,9 @@ function updateUI() {
     render(true);
 }
 
-// 保存処理（スプレッドシート A~J 列の並びに完全準拠）
 async function saveItem(){
     const title = document.getElementById('title').value.trim();
-    if(!title) return alert("タイトルを入力してください");
-    
+    if(!title) return alert("タイトル必須");
     const item = {
         type: document.getElementById('type').value,
         title: title,
@@ -105,84 +100,45 @@ async function saveItem(){
         condition: document.getElementById('condition').value,
         img: document.getElementById('img-url').value
     };
-
     let tempItems = [...items];
     const editIdx = parseInt(document.getElementById('edit-index').value);
     if(editIdx === -1) tempItems.unshift(item);
     else tempItems[editIdx] = item;
-
-    try {
-        const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(tempItems) });
-        if(res.ok) { items = tempItems; updateUI(); resetForm(); }
-    } catch(e) { alert("保存失敗"); }
+    await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(tempItems) });
+    items = tempItems; updateUI(); resetForm();
 }
 
 function render(reset = false){
     if(reset) displayLimit = 30;
     const list = document.getElementById('list');
-    const query = document.getElementById('search').value.toLowerCase();
     list.innerHTML = '';
-    const filtered = items.filter(i => (String(i.title) + String(i.creator || "") + String(i.code || "")).toLowerCase().includes(query));
     
-    filtered.slice(0, displayLimit).forEach((item) => {
+    items.slice(0, displayLimit).forEach((item) => {
         const originalIndex = items.indexOf(item);
         const card = document.createElement('div');
         card.className = 'item-card';
+        // 「中古/新品」の代わりに「日付」を大きく表示
         card.innerHTML = `
             <img src="${item.img || 'https://via.placeholder.com/100?text=No+Img'}" class="item-img">
             <div class="item-main">
                 <div><span class="tag" style="background:${item.type==='record'?'#e67e22':item.type==='cd'?'#9b59b6':'#3498db'}">${item.type}</span></div>
                 <div class="item-title">${item.title}</div>
                 <div class="item-details">
-                    👤 ${item.creator || '不明'}<br>
-                    🆔 ${item.code || '---'}<br>
-                    💰 ${Number(item.price).toLocaleString()}円 | 🗓 ${item.date}
+                    👤 ${item.creator || '---'}<br>
+                    💰 ${Number(item.price).toLocaleString()}円 / <span class="date-label">📅 ${String(item.date).substring(0,10)}</span>
                 </div>
             </div>
             <button class="btn-action" onclick="editItem(${originalIndex})">📝</button>
-            <button class="btn-action" style="color:var(--error)" onclick="deleteItem(${originalIndex})">🗑️</button>
         `;
         list.appendChild(card);
     });
-    document.getElementById('load-more-container').style.display = filtered.length > displayLimit ? 'block' : 'none';
+    document.getElementById('load-more-container').style.display = items.length > displayLimit ? 'block' : 'none';
     updateCharts();
 }
 
 function loadMore() { displayLimit += 30; render(); }
 
-function editItem(idx){
-    const i = items[idx];
-    document.getElementById('type').value = i.type;
-    document.getElementById('title').value = i.title;
-    document.getElementById('creator').value = i.creator;
-    document.getElementById('code').value = i.code;
-    document.getElementById('price').value = i.price;
-    document.getElementById('shop').value = i.shop;
-    document.getElementById('location').value = i.location;
-    let d = String(i.date || "").replace(/\//g, '-').substring(0,10);
-    document.getElementById('date').value = d;
-    document.getElementById('condition').value = i.condition;
-    document.getElementById('edit-index').value = idx;
-    document.getElementById('main-save-btn').innerText = "修正を保存する";
-    document.getElementById('cancel-btn').style.display = "block";
-    window.scrollTo({top: 0, behavior: 'smooth'});
-}
-
-async function deleteItem(idx){
-    if(!confirm("削除しますか？")) return;
-    items.splice(idx, 1);
-    await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(items) });
-    updateUI();
-}
-
-function resetForm(){
-    document.getElementById('edit-index').value = "-1";
-    document.getElementById('title').value = "";
-    document.getElementById('main-save-btn').innerText = "クラウドに保存して同期";
-    document.getElementById('cancel-btn').style.display = "none";
-}
-
-// グラフ更新ロジック：E列(price)とH列(date)を計算
+// グラフ集計ロジック（日付読み取りを大幅強化）
 function updateCharts() {
     let counts = {book:0, cd:0, record:0, other:0};
     let monthlySpend = {};
@@ -190,14 +146,20 @@ function updateCharts() {
     items.forEach(i => {
         counts[i.type || 'other']++;
         
-        // E列(price)の数値をクリーニングして取得
+        // 価格取得
         let p = parseInt(String(i.price).replace(/[^0-9]/g, "")) || 0;
         
-        // H列(date)から年月(YYYY-MM)を取得
-        let d = String(i.date || "").replace(/\//g, '-');
-        let m = d.substring(0, 7); 
+        // 日付取得と正規化 (H列にある想定)
+        let raw = String(i.date || "").trim();
+        let m = "";
         
-        if(m && m.match(/^\d{4}-\d{2}$/)) {
+        // YYYY/MM/DD や YYYY-MM-DD から YYYY-MM を抽出
+        let match = raw.match(/^(\d{4})[/-](\d{1,2})/);
+        if (match) {
+            m = match[1] + "-" + match[2].padStart(2, '0');
+        }
+        
+        if(m) {
             monthlySpend[m] = (monthlySpend[m] || 0) + p;
         }
     });
@@ -206,7 +168,7 @@ function updateCharts() {
     pieChart = new Chart(document.getElementById('pieChart'), {
         type: 'doughnut',
         data: { labels: ['本', 'CD', 'レコード'], datasets: [{ data: [counts.book, counts.cd, counts.record], backgroundColor: ['#3498db', '#9b59b6', '#e67e22'] }] },
-        options: { maintainAspectRatio: false, plugins: { title: { display: true, text: 'アイテム内訳' } } }
+        options: { maintainAspectRatio: false, plugins: { title: { display: true, text: '種類別内訳' } } }
     });
 
     if(lineChart) lineChart.destroy();
@@ -215,14 +177,39 @@ function updateCharts() {
         type: 'line',
         data: {
             labels: sortedMonths,
-            datasets: [{ label: '支出額(円)', data: sortedMonths.map(m => monthlySpend[m]), borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3, pointRadius: 4 }]
+            datasets: [{ 
+                label: '購入額(円)', 
+                data: sortedMonths.map(m => monthlySpend[m]), 
+                borderColor: '#27ae60', 
+                backgroundColor: 'rgba(39, 174, 96, 0.1)', 
+                fill: true, 
+                tension: 0.1, 
+                pointRadius: 5 
+            }]
         },
         options: { 
             maintainAspectRatio: false, 
-            plugins: { title: { display: true, text: '月別収支推移（全期間）' } },
+            plugins: { title: { display: true, text: '月別収支推移' } },
             scales: { y: { beginAtZero: true } }
         }
     });
+}
+
+function resetForm(){
+    document.getElementById('edit-index').value = "-1";
+    document.getElementById('title').value = "";
+    document.getElementById('main-save-btn').innerText = "保存して同期";
+    document.getElementById('cancel-btn').style.display = "none";
+}
+
+function editItem(idx){
+    const i = items[idx];
+    document.getElementById('title').value = i.title;
+    document.getElementById('price').value = i.price;
+    document.getElementById('edit-index').value = idx;
+    document.getElementById('main-save-btn').innerText = "修正を保存";
+    document.getElementById('cancel-btn').style.display = "block";
+    window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
 loadData();
